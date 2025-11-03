@@ -105,7 +105,7 @@ Conditions :
 
 ---
 
-### 6️⃣ **Structure suggérée pour la classe**
+### **Structure suggérée pour la classe**
 
 **Méthodes à créer** :
 
@@ -134,7 +134,7 @@ Conditions :
 
 ---
 
-### 7️⃣ **Pseudo-code de calculerScore()**
+### **Pseudo-code de calculerScore()**
 
 ```
 

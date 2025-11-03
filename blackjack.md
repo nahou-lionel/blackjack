@@ -1,36 +1,12 @@
 ## Architecture du package Blackjack
 
-### Structure recommandée
 
-```
-fr.unicaen.blackjack/
-├── modele/
-│   ├── PartieBlackjack.java      // Orchestrateur principal
-│   ├── Joueur.java                // Joueur (humain ou IA)
-│   ├── Croupier.java              // Le croupier
-│   ├── CalculateurScore.java     // Calcul des scores (gère les As)
-│   ├── EtatPartie.java           // Enum des états
-│   └── Resultat.java             // Résultat d'un joueur (gagné/perdu/égalité)
-├── strategie/
-│   ├── StrategieJoueur.java      // Interface
-│   ├── StrategieHumain.java      // Attend input utilisateur
-│   ├── StrategieConservatrice.java
-│   └── StrategieBasique.java
-├── vue/
-│   ├── VuePartieBlackjack.java   // JFrame principale
-│   ├── VueTable.java             // Panel central (table verte)
-│   ├── VueMainJoueur.java        // extends VuePaquetEventail
-│   ├── VueMainCroupier.java      // Vue spéciale (1 carte cachée)
-│   └── VuePanneauControles.java  // Boutons Tirer/Rester/etc.
-└── controleur/
-    └── ControleurPartie.java     // Gère les interactions
-```
 
----
+
 
 ## Implementation
 
-#### 1. Créer `CalculateurScore.java`
+#### 1. `CalculateurScore.java`
 
 ```java
 public class CalculateurScore {
@@ -50,7 +26,7 @@ public class CalculateurScore {
 }
 ```
 
-#### 2. Créer `Joueur.java`
+#### 2. `Joueur.java`
 
 ```java
 public class Joueur {
@@ -73,7 +49,7 @@ public class Joueur {
 }
 ```
 
-#### 3. Créer `Croupier.java`
+#### 3. `Croupier.java`
 
 ```java
 public class Croupier {
@@ -90,7 +66,7 @@ public class Croupier {
 }
 ```
 
-#### 4. Créer `PartieBlackjack.java`
+#### 4. `PartieBlackjack.java`
 
 ```java
 public class PartieBlackjack {
@@ -110,7 +86,7 @@ public class PartieBlackjack {
 
 ---
 
-#### 5. Créer l'interface `StrategieJoueur.java`
+#### 5.  `StrategieJoueur.java`
 
 ```java
 public interface StrategieJoueur {
@@ -122,20 +98,20 @@ enum Action {
 }
 ```
 
-#### 6. Implémenter les stratégies
+#### 6. Nos stratégies
 
 - **StrategieConservatrice** : Reste à 17+
 - **StrategieBasique** : Tableau de décision simple
 
 ---
 
-#### 7. Créer les vues
+#### 7. Nos vues
 
 - **VueMainCroupier** : Hérite de VuePaquet, gère la carte cachée
 - **VueMainJoueur** : Hérite de VuePaquetEventail, affiche score et jetons
 - **VueTable** : Assemble tout
 
-#### 8. Créer le contrôleur
+#### 8. Contrôleur
 
 - Connecte les boutons aux actions du modèle
 - Met à jour les vues
@@ -149,5 +125,3 @@ enum Action {
 - Penser à remettre les cartes dans le sabot quand il est trop vide
 
 ---
-
-Voulez-vous que je commence par vous détailler une classe en particulier, ou que je vous montre un exemple de code pour `CalculateurScore` qui est crucial ? 🎴
