@@ -116,7 +116,7 @@
         <!-- Create application JAR file -->
         <jar jarfile="${dist.home}/${app.fullname}.jar" basedir="${build.home}">
             <manifest>
-                <attribute name="Main-Class" value="cartes.Main-Class"/>
+                <attribute name="Main-Class" value="cartes.TestGUI"/>
                 <!-- <attribute name="Class-Path" value="lib/utilsGL.jar" /> -->
             </manifest>
         </jar>

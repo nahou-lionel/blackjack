@@ -21,7 +21,7 @@ public class TestGUI {
 
     private static void creerEtAfficherGUI() {
         // Créer la fenêtre principale
-        JFrame frame = new JFrame("Test Vue Paquet en Éventail");
+        JFrame frame = new JFrame("Test Vue Paquet ");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLayout(new BorderLayout());
 
