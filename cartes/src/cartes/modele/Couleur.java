@@ -1,6 +1,6 @@
 package cartes.modele;
 
-public enum Couleur {
+public enum Couleur {    
     PIQUE("♠", false),
     CARREAU("♦", true),
     TREFLE("♣", false),
