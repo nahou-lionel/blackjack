@@ -30,6 +30,7 @@ public class TestGUI {
 
         // Créer la pioche
         Paquet pioche = Paquet.creerPaquet52();
+        pioche.melanger();
         VuePaquet vuePioche = new VuePaquetCache(pioche);
 
         // Créer la défausse
