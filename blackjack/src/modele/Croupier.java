@@ -4,13 +4,35 @@ import cartes.modele.Paquet;
 
 public class Croupier {
     private Paquet main;
-    private boolean cartesCachees = true;
+    private boolean cartesCachees ;
+    private StrategieCroupier strategie;
 
-    public boolean doitTirer() {
-        return getScore() < 17;
+    // Constructeur
+    public Croupier(){
+        this.main = new Paquet();
+        this.cartesCachees = true;
+        this.strategie = new StrategieConservatrice();
     }
 
+    public Paquet getMain(){
+        return this.main;
+    }
+
+    public StrategieCroupier getStrategieCroupier(){
+        return this.strategie;
+    }
+
+    public boolean getCartesCachees(){
+        return this.cartesCachees;
+    }
+
+    // Cette méthode permet de révéler les cartes du croupier
     public void revelerCartes() {
-        cartesCachees = false;
+        this.cartesCachees = false;
+    }
+
+    // Cette méthode permet de définir la stratégie utilisée par le croupier
+    public void useStrategie(StrategieCroupier strategieCroupier){
+        this.strategie = strategieCroupier;
     }
 }
