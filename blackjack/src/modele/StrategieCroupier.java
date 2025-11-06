@@ -1,6 +1,6 @@
 package modele;
 
 public interface StrategieCroupier {
-    Action decider(int scoreCroupier, int carteVisibleCroupier);
+    Action decider(int scoreCroupier);
 }
 

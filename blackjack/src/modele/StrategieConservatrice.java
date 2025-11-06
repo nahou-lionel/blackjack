@@ -6,9 +6,9 @@ public class StrategieConservatrice implements StrategieCroupier{
 
     // Cette méthode décide si le croupier doit rester ou tirer en fonction que son soit inférieur ou supérieur à 17
     @Override
-    public Action decider(int scoreCroupier, int carteVisibleCroupier){
-        int prochainScore = scoreCroupier + carteVisibleCroupier;
-        if(prochainScore < 17){
+    public Action decider(int scoreCroupier){
+        
+        if(scoreCroupier < 17){
             return Action.TIRER;
         }
 

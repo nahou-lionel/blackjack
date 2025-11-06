@@ -1,22 +1,16 @@
 package modele;
 
-import cartes.modele.Paquet;
-
-public class Croupier {
-    private Paquet main;
+public class Croupier extends Joueur{
     private boolean cartesCachees ;
     private StrategieCroupier strategie;
 
     // Constructeur
     public Croupier(){
-        this.main = new Paquet();
+        super();
         this.cartesCachees = true;
         this.strategie = new StrategieConservatrice();
     }
 
-    public Paquet getMain(){
-        return this.main;
-    }
 
     public StrategieCroupier getStrategieCroupier(){
         return this.strategie;

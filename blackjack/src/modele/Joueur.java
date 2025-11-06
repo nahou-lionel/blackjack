@@ -9,15 +9,23 @@ public class Joueur {
     // private int jetons;
     private int miseActuelle;
 
-    // Constructeur
+    // Constructeur Joueur
     public Joueur(String nom) {
         this.nom = nom;
         this.miseActuelle = 0;
         this.main = new Paquet();
     }
 
+    public Joueur() {
+        this.main = new Paquet();
+    }
+
     public String getNom() {
         return this.nom;
+    }
+
+    public Paquet getMain(){
+        return this.main;
     }
 
     public int getMiseActuelle() {
