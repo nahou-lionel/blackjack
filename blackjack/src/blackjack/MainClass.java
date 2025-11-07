@@ -129,82 +129,81 @@ public class MainClass {
         List<Joueur> joueurs = new ArrayList<>();
         joueurs.add(new Joueur("Jean"));
         PartieBlackjack nouvellePartie = new PartieBlackjack(sabot, croupier, joueurs, 0);
-        // 2. Distribution
+
         nouvellePartie.distribuerCartesInitiales();
 
-        // 3. Vérifier blackjack naturel du croupier
         if (CalculateurScore.estBlackjack(nouvellePartie.getCroupier().getMain())) {
             System.out.println("Le croupier a un Blackjack naturel avec les cartes : ");
-
             for (Carte c : croupier.getMain().getCartes()) {
-                 System.out.println(c);
+                System.out.println(c);
             }
-            
             nouvellePartie.determinerGagnants();
             scanner.close();
-            return; // Fin de la partie
+            return;
         }
 
-        // 4. Tour des joueurs
-
         for (int i = 0; i < joueurs.size(); i++) {
+            System.out.println("Carte visible du croupier : " + croupier.getMain().getCartes().get(0));
+            System.out.println("Carte invisible du croupier : " + croupier.getMain().getCartes().get(1));
+            System.out.println();
             Joueur joueur = joueurs.get(i);
 
             System.out.println("\n=== Tour de " + joueur.getNom() + " ===");
-            System.out.println("Carte visible du croupier : " + croupier.getMain().getCartes().get(0));
-            System.out.println("Votre main : " + joueur.getMain());
+            System.out.println("Votre main : ");
+            for (Carte c : joueur.getMain().getCartes()) {
+                System.out.println(c);
+            }
             System.out.println("Votre score : " + joueur.getScore());
+            System.out.println();
 
-            // Tant que le joueur n'a pas bust et n'a pas décidé de rester
             boolean continuerTour = true;
 
             while (continuerTour) {
                 if (joueur.getScore() == 21) {
-                    nouvellePartie.joueurReste(i);
+                    System.out.println("Je reste à 21");
                     continuerTour = false;
-                    
-                }
-
-                else {
-
+                } else {
                     System.out.println("\nQue voulez-vous faire ?");
                     System.out.println("1. Tirer une carte");
                     System.out.println("2. Rester");
-                    // System.out.println("3. Doubler");
                     System.out.print("Votre choix (1/2) : ");
+                    System.out.println();
 
                     int choix = scanner.nextInt();
-                   
 
                     switch (choix) {
-                        case 1: // TIRER
+                        case 1:
                             System.out.println("\n" + joueur.getNom() + " tire une carte");
                             nouvellePartie.joueurTire(i);
-                            
-                            System.out.println("Nouveau score : " + joueur.getScore());
 
-                            // Vérifier si le joueur a bust
-                            if (joueur.getScore() > 21) {
-                                System.out.println("❌ Vous avez dépassé 21 ! (Bust)");
+                            // Rafraîchir le score après avoir tiré la carte
+                            int nouveauScore = joueur.getScore();
+                            System.out.println("Nouvelle main : ");
+                            for (Carte c : joueur.getMain().getCartes()) {
+                                System.out.println(c);
+                            }
+
+                            System.out.println("Nouveau score : " + nouveauScore);
+                            System.out.println();
+
+                            if (nouveauScore > 21) {
+                                System.out.println("Vous avez dépassé 21 ! (Bust)");
                                 continuerTour = false;
                             }
                             break;
 
-                        case 2: // RESTER 
+                        case 2:
                             continuerTour = false;
                             break;
 
-                        
                         default:
-                            System.out.println("⚠️  Choix invalide, veuillez choisir 1, 2 ou 3");
+                            System.out.println("Choix invalide, veuillez choisir 1 ou 2");
                             break;
                     }
                 }
             }
-
         }
 
-        // 5. Tour du croupier (seulement si au moins un joueur n'a pas bust)
         boolean auMoinsUnJoueurEnJeu = false;
         for (Joueur joueur : joueurs) {
             if (joueur.getScore() <= 21) {
@@ -216,29 +215,44 @@ public class MainClass {
         if (auMoinsUnJoueurEnJeu) {
             nouvellePartie.jouerTourCroupier();
 
-            System.out.println("Le croupier a un score de " + croupier.getScore()+  " avec les cartes : ");
-            
+            System.out.println("Le croupier a un score de " + croupier.getScore() + " avec les cartes : ");
             for (Carte c : croupier.getMain().getCartes()) {
-                 System.out.println(c);
+                System.out.println(c);
             }
-
-
-
-            // 6. Déterminer les gagnants
+            System.out.println();
             List<Joueur> gagnants = nouvellePartie.determinerGagnants();
 
-            System.out.println(gagnants);
+            if (gagnants.isEmpty()) {
+                boolean matchNul = false;
+                for (Joueur joueur : joueurs) {
+                    if (!joueur.aDepasse() && joueur.getScore() == croupier.getScore()) {
+                        matchNul = true;
+                        break;
+                    }
+                }
 
-           
-            for (Joueur joueur : gagnants) {
-                System.out.println("Le gagnant est " + joueur.getNom());
+                if (matchNul) {
+                    System.out.println("Match nul ! Les mises sont remboursées.");
+                    System.out.println();
+                } else {
+                    System.out.println("Aucun gagnant - le croupier remporte la partie");
+                    System.out.println();
+                }
+            } else {
+                for (Joueur joueur : gagnants) {
+                    if (CalculateurScore.estBlackjack(joueur.getMain())) {
+                        System.out.println("Blackjack ! " + joueur.getNom() + " gagne avec un Blackjack naturel");
+                        System.out.println();
+                    } else {
+                        System.out.println(joueur.getNom() + " gagne avec un score de " + joueur.getScore());
+                    }
+                }
             }
 
-        
-
-            System.out.println("Score du croupier est " + croupier.getScore());
-        
-    }
+            System.out.println("Score du croupier : " + croupier.getScore());
+        } else {
+            System.out.println("Tous les joueurs ont busté - le croupier gagne automatiquement");
+        }
 
         scanner.close();
 

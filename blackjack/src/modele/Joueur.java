@@ -58,18 +58,18 @@ public class Joueur {
         miseActuelle = 0;
     }
 
-    // Cette méthode permet au joueur de rester
-    public Action rester(){
-        return Action.RESTER;
-    }
+    // // Cette méthode permet au joueur de rester
+    // public Action rester(){
+    //     return Action.RESTER;
+    // }
 
-    // Cette méthode permet au joueur de tirer
-    public Action tirer(){
-        return Action.TIRER;
-    }
+    // // Cette méthode permet au joueur de tirer
+    // public Action tirer(){
+    //     return Action.TIRER;
+    // }
 
-    // Cette méthode permet au joueur de doubler
-    public Action doubler(){
-        return Action.DOUBLER;
-    }
+    // // Cette méthode permet au joueur de doubler
+    // public Action doubler(){
+    //     return Action.DOUBLER;
+    // }
 }

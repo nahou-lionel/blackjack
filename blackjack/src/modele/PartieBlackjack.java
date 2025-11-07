@@ -15,7 +15,7 @@ public class PartieBlackjack {
         this.sabot = sabot;
         this.croupier = croupier;
         this.joueurs = joueurs;
-        this.indiceJoueurActif = 0;
+        this.indiceJoueurActif = indiceJoueurActif;
     }
 
     public Paquet getSabot() {
@@ -39,7 +39,6 @@ public class PartieBlackjack {
     }
 
     public void distribuerCartesInitiales() {
-
         this.croupier.recevoirCarte(this.sabot.retirerPremiereCarte());
         this.croupier.recevoirCarte(this.sabot.retirerPremiereCarte());
 
@@ -47,29 +46,18 @@ public class PartieBlackjack {
             joueur.recevoirCarte(this.sabot.retirerPremiereCarte());
             joueur.recevoirCarte(this.sabot.retirerPremiereCarte());
         }
-
     }
 
     public void joueurTire(int joueurActif) {
+        System.out.println(this.sabot.getCarte(0));
         this.joueurs.get(joueurActif).recevoirCarte(this.sabot.retirerPremiereCarte());
-        ;
     }
-
-    public int joueurReste(int joueurActif) {
-        return joueurs.get(joueurActif).getScore();
-    }
-
-    // public void joueurDouble(int joueurActif) {
-    // this.joueurs.get(joueurActif).miser(this.joueurs.get(joueurActif).getMiseActuelle()
-    // * 2);
-    // }
 
     public void jouerTourCroupier() {
-        Action actionCroupier = this.croupier.getStrategieCroupier().decider(this.croupier.getScore());
-
-        while (!actionCroupier.equals(Action.RESTER)) {
-            actionCroupier = this.croupier.getStrategieCroupier().decider(this.croupier.getScore());
-
+        this.croupier.revelerCartes();
+        
+        while (this.croupier.getStrategieCroupier().decider(this.croupier.getScore()).equals(Action.TIRER)) {
+            this.croupier.recevoirCarte(this.sabot.retirerPremiereCarte());
         }
 
         if (CalculateurScore.aDepasse(this.croupier.getMain())) {
@@ -79,69 +67,34 @@ public class PartieBlackjack {
     }
 
     public List<Joueur> determinerGagnants() {
-        int scoreMax = 0;
-        ArrayList<Joueur> gagnantsSansBlackJack = new ArrayList<>();
-        ArrayList<Joueur> joueursRestants = new ArrayList<>();
-        ArrayList<Joueur> gagnantsAvecBlackJack = new ArrayList<>();
+    ArrayList<Joueur> gagnants = new ArrayList<>();
+    int scoreCroupier = this.croupier.getScore();
+    boolean croupierBlackjack = CalculateurScore.estBlackjack(this.croupier.getMain());
+    boolean croupierBust = CalculateurScore.aDepasse(this.croupier.getMain());
 
-        // 1. Filtrer les joueurs qui n'ont pas bust
-        for (Joueur joueur : this.joueurs) {
-            if (joueur.getScore() <= 21) {
-                joueursRestants.add(joueur);
-            }
+    for (Joueur joueur : this.joueurs) {
+        boolean joueurBlackjack = CalculateurScore.estBlackjack(joueur.getMain());
+        boolean joueurBust = CalculateurScore.aDepasse(joueur.getMain());
+        int scoreJoueur = joueur.getScore();
+
+        if (joueurBust) {
+            continue; // Joueur a perdu
         }
 
-        // 2. Si le croupier a bust, tous les joueurs non-bust gagnent
-        if (CalculateurScore.aDepasse(this.croupier.getMain())) {
-            System.out.println("Le croupier a bust ! Tous les joueurs restants gagnent.");
-            return joueursRestants;
+        if (croupierBust) {
+            gagnants.add(joueur); // Joueur gagne
+        } else if (joueurBlackjack && !croupierBlackjack) {
+            gagnants.add(joueur); // Joueur gagne avec blackjack
+        } else if (croupierBlackjack && !joueurBlackjack) {
+            continue; // Croupier gagne avec blackjack
+        } else if (scoreJoueur > scoreCroupier) {
+            gagnants.add(joueur); // Joueur gagne avec score supérieur
+        } else if (scoreJoueur == scoreCroupier && joueurBlackjack && croupierBlackjack) {
+            gagnants.add(joueur); // Égalité avec blackjack des deux côtés
         }
-
-        // 3. Trouver le score max parmi les joueurs non-bust
-        for (Joueur joueur : joueursRestants) {
-            if (joueur.getScore() > scoreMax) {
-                scoreMax = joueur.getScore();
-            }
-        }
-
-        // 4. Déterminer les gagnants avec blackjack
-        for (Joueur joueur : this.joueurs) {
-            if (CalculateurScore.estBlackjack(joueur.getMain())) {
-                gagnantsAvecBlackJack.add(joueur);
-            }
-        }
-
-        // 5. Si le croupier a un blackjack
-        if (CalculateurScore.estBlackjack(this.croupier.getMain())) {
-            if (gagnantsAvecBlackJack.isEmpty()) {
-                System.out.println("Le croupier gagne avec un Blackjack !");
-                return new ArrayList<>(); // Personne ne gagne
-            } else {
-                System.out.println(
-                        "Égalité ! Le croupier et " + gagnantsAvecBlackJack.size() + " joueur(s) ont un Blackjack.");
-                return gagnantsAvecBlackJack; // Push (égalité)
-            }
-        }
-
-        // 6. Si des joueurs ont un blackjack (mais pas le croupier)
-        if (!gagnantsAvecBlackJack.isEmpty()) {
-            System.out.println("Blackjack ! Les joueurs gagnent avec un Blackjack naturel.");
-            return gagnantsAvecBlackJack;
-        }
-
-        // 7. Comparer les scores (ni joueur ni croupier n'a de blackjack)
-        int scoreCroupier = this.croupier.getScore();
-
-        for (Joueur joueur : joueursRestants) {
-            if (joueur.getScore() > scoreCroupier) {
-                gagnantsSansBlackJack.add(joueur);
-            } else if (joueur.getScore() == scoreCroupier) {
-                System.out.println(joueur.getNom() + " fait égalité avec le croupier (Push).");
-                // Tu peux gérer le push ici (rendre la mise)
-            }
-            // Si joueur.getScore() < scoreCroupier, le joueur perd (rien à faire)
-        }
-
-        return gagnantsSansBlackJack;
+        // Dans le cas d'égalité sans blackjack, aucun gagnant n'est ajouté (push)
     }
+
+    return gagnants;
+}
 }
