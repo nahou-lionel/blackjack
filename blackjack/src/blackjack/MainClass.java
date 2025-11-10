@@ -143,10 +143,26 @@ public class MainClass {
         }
 
         for (int i = 0; i < joueurs.size(); i++) {
+            Joueur joueur = joueurs.get(i);
+
+            System.out.println("Placez votre mise");
+            System.out.println("1. 100$");
+            int choixMise = scanner.nextInt();
+
+            switch (choixMise) {
+                        case 1:
+                            joueur.miser(100);
+                            break;
+                        default:
+                            System.out.println("Choix invalide, veuillez choisir 1");
+                            break;
+                            
+            }
+            System.out.println();
             System.out.println("Carte visible du croupier : " + croupier.getMain().getCartes().get(0));
             System.out.println("Carte invisible du croupier : " + croupier.getMain().getCartes().get(1));
             System.out.println();
-            Joueur joueur = joueurs.get(i);
+            
 
             System.out.println("\n=== Tour de " + joueur.getNom() + " ===");
             System.out.println("Votre main : ");
@@ -155,6 +171,8 @@ public class MainClass {
             }
             System.out.println("Votre score : " + joueur.getScore());
             System.out.println();
+
+            
 
             boolean continuerTour = true;
 
@@ -232,19 +250,30 @@ public class MainClass {
                 }
 
                 if (matchNul) {
+                    for (Joueur joueur : joueurs) {
+                        joueur.setBanque(joueur.getBanque() + joueur.getMiseActuelle());
+                    }
                     System.out.println("Match nul ! Les mises sont remboursées.");
+                    
                     System.out.println();
                 } else {
+                    for (Joueur joueur : joueurs) {
+                                        System.out.println(joueur.getNom() + " a perdu et a maintenant " + joueur.getBanque()+ "$ dollars");
+
+                }
                     System.out.println("Aucun gagnant - le croupier remporte la partie");
+
                     System.out.println();
                 }
             } else {
                 for (Joueur joueur : gagnants) {
                     if (CalculateurScore.estBlackjack(joueur.getMain())) {
-                        System.out.println("Blackjack ! " + joueur.getNom() + " gagne avec un Blackjack naturel");
+                        joueur.setBanque((int)(joueur.getBanque()+(2.5*joueur.getMiseActuelle())));
+                        System.out.println("Blackjack ! " + joueur.getNom() + " gagne avec un Blackjack naturel et a maintenant " + joueur.getBanque()+ "$ dollars");
                         System.out.println();
                     } else {
-                        System.out.println(joueur.getNom() + " gagne avec un score de " + joueur.getScore());
+                        joueur.setBanque(joueur.getBanque()+(2*joueur.getMiseActuelle()));
+                        System.out.println(joueur.getNom() + " gagne avec un score de " + joueur.getScore() + " et a maintenant "  + joueur.getBanque()+ "$ dollars");
                     }
                 }
             }

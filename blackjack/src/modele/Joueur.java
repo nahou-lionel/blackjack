@@ -8,11 +8,13 @@ public class Joueur {
     private Paquet main;
     // private int jetons;
     private int miseActuelle;
+    private int banque;
 
     // Constructeur Joueur
     public Joueur(String nom) {
         this.nom = nom;
         this.miseActuelle = 0;
+        this.banque = 500;
         this.main = new Paquet();
     }
 
@@ -24,6 +26,14 @@ public class Joueur {
         return this.nom;
     }
 
+    public int getBanque(){
+        return this.banque;
+    }
+
+    public void setBanque(int banque){
+        this.banque = banque;
+    }
+
     public Paquet getMain(){
         return this.main;
     }
@@ -32,9 +42,11 @@ public class Joueur {
         return this.miseActuelle;
     }
 
+
     // Cette méthode place la mise du joueur 
     public void miser(int montant) {
         this.miseActuelle = montant;
+        this.banque = this.banque - this.miseActuelle;
     }
 
     // Cette méthode ajoute une carte à la main du joueur
