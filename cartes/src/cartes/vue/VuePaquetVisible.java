@@ -13,8 +13,22 @@ public class VuePaquetVisible extends VuePaquet implements VuePaquetInteractive 
     private static final int ESPACEMENT_CARTE = 80; // Espacement entre cartes
     private int carteEnSurbrillance = -1;
 
+    /**
+     * Constructeur avec couleur de fond par défaut
+     * @param paquet Le paquet à afficher
+     */
     public VuePaquetVisible(Paquet paquet) {
         super(paquet);
+        calculerDimensions();
+    }
+
+    /**
+     * Constructeur avec couleur de fond personnalisée
+     * @param paquet Le paquet à afficher
+     * @param backgroundColor Couleur de fond (null pour défaut, new Color(0,0,0,0) pour transparent)
+     */
+    public VuePaquetVisible(Paquet paquet, Color backgroundColor) {
+        super(paquet, backgroundColor);
         calculerDimensions();
     }
 

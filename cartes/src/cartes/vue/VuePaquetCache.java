@@ -13,8 +13,22 @@ public class VuePaquetCache extends VuePaquet {
     private static final int DECALAGE_CARTE = 2; // Décalage en pixels pour l'effet d'empilement
     private static final int MAX_CARTES_VISIBLES = 10; // Nombre max de cartes à dessiner
 
+    /**
+     * Constructeur avec couleur de fond par défaut
+     * @param paquet Le paquet à afficher
+     */
     public VuePaquetCache(Paquet paquet) {
         super(paquet);
+        calculerDimensions();
+    }
+
+    /**
+     * Constructeur avec couleur de fond personnalisée
+     * @param paquet Le paquet à afficher
+     * @param backgroundColor Couleur de fond (null pour défaut, new Color(0,0,0,0) pour transparent)
+     */
+    public VuePaquetCache(Paquet paquet, Color backgroundColor) {
+        super(paquet, backgroundColor);
         calculerDimensions();
     }
 

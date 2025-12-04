@@ -1,21 +1,29 @@
 package modele;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import cartes.modele.Paquet;
 
+/**
+ * Orchestrateur principal du jeu de Blackjack
+ * Gère le cycle de vie complet d'une manche : distribution, tours, résultats et paiements
+ */
 public class PartieBlackjack {
     private Paquet sabot;
     private Croupier croupier;
     private List<Joueur> joueurs;
     private int indiceJoueurActif;
+    private EtatPartie etat;
 
     public PartieBlackjack(Paquet sabot, Croupier croupier, List<Joueur> joueurs, int indiceJoueurActif) {
         this.sabot = sabot;
         this.croupier = croupier;
         this.joueurs = joueurs;
         this.indiceJoueurActif = indiceJoueurActif;
+        this.etat = EtatPartie.ATTENTE_MISE;
     }
 
     public Paquet getSabot() {
@@ -34,8 +42,31 @@ public class PartieBlackjack {
         return this.indiceJoueurActif;
     }
 
-    public void demarrerNouvellePartie() {
+    public EtatPartie getEtat() {
+        return this.etat;
+    }
 
+    /**
+     * Démarre une nouvelle manche de Blackjack
+     * Vérifie et reshuffle le sabot si nécessaire, réinitialise les mains
+     */
+    public void demarrerNouvellePartie() {
+        // Vérifier si le sabot a besoin d'être reshufflé
+        if (sabotNecessiteReshuffle()) {
+            reshufflerSabot(2); // 2 jeux par défaut
+        }
+
+        // Réinitialiser l'état
+        this.etat = EtatPartie.DISTRIBUTION;
+
+        // Vider les mains
+        croupier.getMain().vider();
+        for (Joueur joueur : joueurs) {
+            joueur.getMain().vider();
+        }
+
+        // Réinitialiser la carte cachée du croupier
+        croupier.revelerCartes(); // Reset au cas où
     }
 
     public void distribuerCartesInitiales() {
@@ -97,4 +128,112 @@ public class PartieBlackjack {
 
     return gagnants;
 }
+
+    /**
+     * Vérifie s'il y a des blackjacks naturels après la distribution initiale
+     *
+     * @return ResultatBlackjack si au moins un blackjack détecté, null sinon
+     */
+    public ResultatBlackjack verifierBlackjacksNaturels() {
+        boolean joueurBJ = false;
+        boolean croupierBJ = CalculateurScore.estBlackjack(croupier.getMain());
+
+        // Pour simplifier, on vérifie seulement le premier joueur
+        // (extension possible pour multi-joueurs)
+        if (!joueurs.isEmpty()) {
+            joueurBJ = CalculateurScore.estBlackjack(joueurs.get(0).getMain());
+        }
+
+        // Si au moins un blackjack détecté
+        if (joueurBJ || croupierBJ) {
+            this.etat = EtatPartie.BLACKJACK_NATUREL;
+            return new ResultatBlackjack(joueurBJ, croupierBJ);
+        }
+
+        // Pas de blackjack, transition vers le tour du joueur
+        this.etat = EtatPartie.TOUR_JOUEUR;
+        return null;
+    }
+
+    /**
+     * Termine la manche et calcule tous les résultats et paiements
+     *
+     * @return ResultatManche complet avec gagnants et paiements
+     */
+    public ResultatManche terminerManche() {
+        // Jouer le tour du croupier
+        this.etat = EtatPartie.TOUR_CROUPIER;
+        jouerTourCroupier();
+
+        // Déterminer les gagnants
+        List<Joueur> gagnants = determinerGagnants();
+
+        // Calculer les paiements
+        Map<Joueur, Paiement> paiements = ServicePaiement.calculerPaiements(
+                joueurs, gagnants, croupier
+        );
+
+        // Appliquer les paiements
+        ServicePaiement.appliquerPaiements(paiements);
+
+        // Marquer la manche comme terminée
+        this.etat = EtatPartie.TERMINE;
+
+        return new ResultatManche(gagnants, paiements, etat, false);
+    }
+
+    /**
+     * Termine une manche qui s'est achevée sur un blackjack naturel
+     *
+     * @param resultatBlackjack Le résultat de la vérification des blackjacks
+     * @return ResultatManche avec les paiements appropriés
+     */
+    public ResultatManche terminerMancheBlackjack(ResultatBlackjack resultatBlackjack) {
+        // Révéler les cartes du croupier
+        croupier.revelerCartes();
+
+        // Calculer le paiement pour le joueur principal
+        Map<Joueur, Paiement> paiements = new HashMap<>();
+        List<Joueur> gagnants = new ArrayList<>();
+
+        for (Joueur joueur : joueurs) {
+            Paiement paiement = ServicePaiement.calculerPaiementBlackjack(
+                    joueur, resultatBlackjack
+            );
+            paiements.put(joueur, paiement);
+
+            // Si le joueur gagne ou fait push, l'ajouter aux "gagnants"
+            if (paiement.getTypeResultat() != TypeResultat.PERTE) {
+                gagnants.add(joueur);
+            }
+        }
+
+        // Appliquer les paiements
+        ServicePaiement.appliquerPaiements(paiements);
+
+        // Marquer comme terminé
+        this.etat = EtatPartie.TERMINE;
+
+        return new ResultatManche(gagnants, paiements, etat, true);
+    }
+
+    /**
+     * Vérifie si le sabot a besoin d'être reshufflé
+     *
+     * @return true si le sabot contient moins de 10 cartes
+     */
+    public boolean sabotNecessiteReshuffle() {
+        return sabot.getTaille() < 10;
+    }
+
+    /**
+     * Reshuffle le sabot avec un nombre donné de jeux de cartes
+     *
+     * @param nombreJeux Nombre de jeux de 52 cartes à utiliser
+     */
+    public void reshufflerSabot(int nombreJeux) {
+        sabot.vider();
+        sabot = Paquet.creerPaquetMultiple(nombreJeux);
+        sabot.melanger();
+    }
 }

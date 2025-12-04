@@ -18,11 +18,38 @@ public abstract class VuePaquet extends JPanel implements ModelListener {
     protected static final int LARGEUR_CARTE = 70;
     protected static final int HAUTEUR_CARTE = 100;
     protected static final int RAYON_COIN = 10;
+    protected Color backgroundColor;
 
+    /**
+     * Constructeur avec couleur de fond par défaut
+     * @param paquet Le paquet à observer
+     */
     public VuePaquet(Paquet paquet) {
+        this(paquet, null);
+    }
+
+    /**
+     * Constructeur avec couleur de fond personnalisée
+     * @param paquet Le paquet à observer
+     * @param backgroundColor Couleur de fond (null pour défaut, new Color(0,0,0,0) pour transparent)
+     */
+    public VuePaquet(Paquet paquet, Color backgroundColor) {
         super();
         this.paquet = paquet;
         this.paquet.addModelListener(this);
+        this.backgroundColor = backgroundColor;
+
+        if (backgroundColor != null) {
+            // Si une couleur est spécifiée
+            if (backgroundColor.getAlpha() == 0) {
+                // Transparent
+                setOpaque(false);
+            } else {
+                // Opaque avec couleur
+                setOpaque(true);
+                setBackground(backgroundColor);
+            }
+        }
     }
 
     public Paquet getPaquet() {
