@@ -8,6 +8,7 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -34,6 +35,7 @@ import cartes.vue.VuePaquetVisible;
 import modele.CalculateurScore;
 import modele.Croupier;
 import modele.Joueur;
+import modele.MainJoueur;
 import modele.PartieBlackjack;
 import modele.Paiement;
 import modele.ResultatBlackjack;
@@ -79,6 +81,11 @@ public class VuePartie extends JPanel {
     private final List<JButton> jetons = new ArrayList<>();
 
     private int mise = 0;
+    private int misePrecedente = 0;
+
+    // Gestion du split
+    private int mainActiveIndex = 0; // Index de la main actuellement jouée (0 ou 1 après split)
+    private boolean enModeSplit = false;
 
     public VuePartie() {
 
@@ -131,33 +138,9 @@ public class VuePartie extends JPanel {
         JPanel barreHaut = creerBarreHaut();
         add(barreHaut, BorderLayout.NORTH);
 
-        // Zone centrale avec bandeau de message
-        JLayeredPane conteneurCentre = new JLayeredPane();
-        conteneurCentre.setLayout(null);
-
+        // Zone centrale
         JPanel zoneCentre = creerZoneCentre();
-        conteneurCentre.add(zoneCentre, JLayeredPane.DEFAULT_LAYER);
-
-        // Créer le bandeau de message
-        labelMessage = new JLabel("Placez votre mise pour commencer", SwingConstants.CENTER);
-        labelMessage.setFont(new Font("SansSerif", Font.BOLD, 18));
-        labelMessage.setForeground(new Color(255, 215, 255));
-        labelMessage.setOpaque(true);
-        labelMessage.setBackground(new Color(0, 0, 0, 100));
-        labelMessage.setBorder(BorderFactory.createEmptyBorder(15, 40, 15, 40));
-        labelMessage.setVisible(true);
-        conteneurCentre.add(labelMessage, JLayeredPane.PALETTE_LAYER);
-
-        // Gérer le redimensionnement
-        conteneurCentre.addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                zoneCentre.setBounds(0, 0, conteneurCentre.getWidth(), conteneurCentre.getHeight());
-                positionnerBandeau();
-            }
-        });
-
-        add(conteneurCentre, BorderLayout.CENTER);
+        add(zoneCentre, BorderLayout.CENTER);
 
         // Panel actions et mises
         JPanel panelActions = new JPanel(new BorderLayout());
@@ -179,26 +162,26 @@ public class VuePartie extends JPanel {
         panelHaut.setBackground(new Color(14, 14, 14));
         panelHaut.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
+        // Panel central avec titre et message
+        JPanel panelCentre = new JPanel();
+        panelCentre.setOpaque(false);
+        panelCentre.setLayout(new BoxLayout(panelCentre, BoxLayout.Y_AXIS));
+
         labelTitre = new JLabel("BLACKJACK", SwingConstants.CENTER);
         labelTitre.setFont(new Font("SansSerif", Font.BOLD, 24));
         labelTitre.setForeground(Color.WHITE);
+        labelTitre.setAlignmentX(CENTER_ALIGNMENT);
 
-        // Panel pour contenir le solde et la mise actuel
-        JPanel panelInfo = new JPanel();
-        panelInfo.setOpaque(false);
-        panelInfo.setLayout(new BoxLayout(panelInfo, BoxLayout.X_AXIS));
-        labelSolde = new JLabel();
-        labelSolde.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        labelSolde.setForeground(Color.WHITE);
-        labelMise = new JLabel();
-        labelMise.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        labelMise.setForeground(Color.WHITE);
-        panelInfo.add(labelSolde);
-        panelInfo.add(Box.createHorizontalStrut(20));
-        panelInfo.add(labelMise);
+        labelMessage = new JLabel("Placez votre mise pour commencer", SwingConstants.CENTER);
+        labelMessage.setFont(new Font("SansSerif", Font.ITALIC, 14));
+        labelMessage.setForeground(new Color(255, 215, 0));
+        labelMessage.setAlignmentX(CENTER_ALIGNMENT);
 
-        panelHaut.add(labelTitre, BorderLayout.CENTER);
-        panelHaut.add(panelInfo, BorderLayout.EAST);
+        panelCentre.add(labelTitre);
+        panelCentre.add(Box.createVerticalStrut(5));
+        panelCentre.add(labelMessage);
+
+        panelHaut.add(panelCentre, BorderLayout.CENTER);
         return panelHaut;
     }
 
@@ -206,26 +189,57 @@ public class VuePartie extends JPanel {
         JPanel centre = new JPanel(new BorderLayout());
         centre.setOpaque(false);
 
+        // Bloc solde et mise en haut à droite
+        JPanel panelInfo = new JPanel();
+        panelInfo.setOpaque(true);
+        panelInfo.setBackground(new Color(0, 0, 0, 150));
+        panelInfo.setLayout(new BoxLayout(panelInfo, BoxLayout.Y_AXIS));
+        panelInfo.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(255, 215, 0), 2),
+                BorderFactory.createEmptyBorder(10, 15, 10, 15)));
+
+        labelSolde = new JLabel();
+        labelSolde.setFont(new Font("SansSerif", Font.BOLD, 16));
+        labelSolde.setForeground(Color.WHITE);
+        labelSolde.setAlignmentX(CENTER_ALIGNMENT);
+
+        labelMise = new JLabel();
+        labelMise.setFont(new Font("SansSerif", Font.BOLD, 16));
+        labelMise.setForeground(new Color(255, 215, 0));
+        labelMise.setAlignmentX(CENTER_ALIGNMENT);
+
+        panelInfo.add(labelSolde);
+        panelInfo.add(Box.createVerticalStrut(5));
+        panelInfo.add(labelMise);
+
+        // Panel en haut avec pioche à gauche et info à droite
+        JPanel panelHautCentre = new JPanel(new BorderLayout());
+        panelHautCentre.setOpaque(false);
+        panelHautCentre.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+
         JPanel panelPioche = new JPanel();
         panelPioche.setOpaque(false);
-        panelPioche.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 10));
         panelPioche.add(vuePioche);
-        centre.add(panelPioche, BorderLayout.WEST);
 
-        // Zone des cartes
-        JPanel plateau = new JPanel();
+        JPanel containerInfo = new JPanel();
+        containerInfo.setOpaque(false);
+        containerInfo.add(panelInfo);
+
+        panelHautCentre.add(panelPioche, BorderLayout.WEST);
+        panelHautCentre.add(containerInfo, BorderLayout.EAST);
+
+        centre.add(panelHautCentre, BorderLayout.NORTH);
+
+        // Zone des cartes - GridLayout pour partage équitable de l'espace
+        JPanel plateau = new JPanel(new GridLayout(2, 1, 0, 20));
         plateau.setOpaque(false);
-        plateau.setLayout(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.weightx = 1;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.insets = new Insets(4, 10, 4, 10);
+        plateau.setBorder(BorderFactory.createEmptyBorder(20, 10, 20, 10));
 
-        // panelCroupier
-        JPanel blocCroupier = new JPanel();
+        // Panel Croupier
+        JPanel blocCroupier = new JPanel(new BorderLayout());
         blocCroupier.setOpaque(false);
-        blocCroupier.setLayout(new BorderLayout());
+        blocCroupier.setBorder(BorderFactory.createEmptyBorder(10, 0, 30, 0));
+
         // Couche: vue + overlay dos de carte
         coucheCroupier = new JLayeredPane();
         coucheCroupier.setOpaque(false);
@@ -271,57 +285,56 @@ public class VuePartie extends JPanel {
                 mettreEnPlaceCoucheCroupier();
             }
         });
+
         JPanel centreCroupier = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         centreCroupier.setOpaque(false);
         centreCroupier.add(coucheCroupier);
-        blocCroupier.add(centreCroupier, BorderLayout.CENTER);
+
         JLabel titreCroupier = new JLabel("CROUPIER", SwingConstants.CENTER);
         titreCroupier.setFont(new Font("SansSerif", Font.BOLD, 16));
         titreCroupier.setForeground(Color.WHITE);
-        labelScoreCroupier = new JLabel("", SwingConstants.CENTER);
+        labelScoreCroupier = new JLabel("0", SwingConstants.CENTER);
         labelScoreCroupier.setFont(new Font("SansSerif", Font.PLAIN, 14));
         labelScoreCroupier.setForeground(Color.WHITE);
+
         JPanel footerCroupier = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 0));
         footerCroupier.setOpaque(false);
         badgeCroupier = creerBadgeGagnant();
         footerCroupier.add(titreCroupier);
         footerCroupier.add(labelScoreCroupier);
         footerCroupier.add(badgeCroupier);
-        footerCroupier.setBorder(BorderFactory.createEmptyBorder(2, 0, 0, 0));
+
+        blocCroupier.add(centreCroupier, BorderLayout.CENTER);
         blocCroupier.add(footerCroupier, BorderLayout.SOUTH);
 
-        gbc.gridy = 0;
-        gbc.weighty = 0.4;
-        gbc.anchor = GridBagConstraints.PAGE_START;
-        plateau.add(blocCroupier, gbc);
-
-        // Panel joueur
-        JPanel blocJoueur = new JPanel();
+        // Panel Joueur
+        JPanel blocJoueur = new JPanel(new BorderLayout());
         blocJoueur.setOpaque(false);
-        blocJoueur.setLayout(new BorderLayout());
+        blocJoueur.setBorder(BorderFactory.createEmptyBorder(30, 0, 10, 0));
+
         JPanel contJoueur = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         contJoueur.setOpaque(false);
         contJoueur.add(vueJoueur);
-        blocJoueur.add(contJoueur, BorderLayout.CENTER);
+
         JLabel titreJoueur = new JLabel("JOUEUR", SwingConstants.CENTER);
         titreJoueur.setFont(new Font("SansSerif", Font.BOLD, 16));
         titreJoueur.setForeground(Color.WHITE);
-        labelScoreJoueur = new JLabel("", SwingConstants.CENTER);
+        labelScoreJoueur = new JLabel("0", SwingConstants.CENTER);
         labelScoreJoueur.setFont(new Font("SansSerif", Font.PLAIN, 14));
         labelScoreJoueur.setForeground(Color.WHITE);
+
         JPanel footerJoueur = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 0));
         footerJoueur.setOpaque(false);
         badgeJoueur = creerBadgeGagnant();
         footerJoueur.add(titreJoueur);
         footerJoueur.add(labelScoreJoueur);
         footerJoueur.add(badgeJoueur);
-        footerJoueur.setBorder(BorderFactory.createEmptyBorder(2, 0, 0, 0));
+
+        blocJoueur.add(contJoueur, BorderLayout.CENTER);
         blocJoueur.add(footerJoueur, BorderLayout.SOUTH);
 
-        gbc.gridy = 1;
-        gbc.weighty = 0.6;
-        gbc.anchor = GridBagConstraints.PAGE_END;
-        plateau.add(blocJoueur, gbc);
+        plateau.add(blocCroupier);
+        plateau.add(blocJoueur);
 
         centre.add(plateau, BorderLayout.CENTER);
         return centre;
@@ -361,8 +374,12 @@ public class VuePartie extends JPanel {
                 gererActionDouble();
             }
         });
-        // Separer laissé inactif (selon règle, nécessite logique de paires)
-        boutonSeparer.setEnabled(false);
+        boutonSeparer.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                gererActionSeparer();
+            }
+        });
 
         return actions;
     }
@@ -384,6 +401,7 @@ public class VuePartie extends JPanel {
         // Ligne actions de mise
         JPanel ligneMiseActions = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 6));
         ligneMiseActions.setOpaque(false);
+
         boutonResetMise = creerBoutonAction("Reset Bet", new Color(80, 80, 80));
         boutonResetMise.addActionListener(e -> {
             mise = 0;
@@ -391,7 +409,15 @@ public class VuePartie extends JPanel {
             basculerEtatBoutonsInitial();
         });
 
+        JButton boutonToutMiser = creerBoutonAction("Tout Miser", new Color(204, 0, 0));
+        boutonToutMiser.addActionListener(e -> {
+            mise = joueurPrincipal.getBanque();
+            rafraichirAffichage();
+            boutonMiser.setEnabled(mise > 0);
+        });
+
         ligneMiseActions.add(boutonResetMise);
+        ligneMiseActions.add(boutonToutMiser);
 
         misesPanel.add(ligneJetons);
         misesPanel.add(ligneMiseActions);
@@ -490,6 +516,9 @@ public class VuePartie extends JPanel {
         if (mise <= 0)
             return;
 
+        // Sauvegarder la mise pour le prochain tour
+        misePrecedente = mise;
+
         afficherMessage("Distribution des cartes...");
 
         // Démarrer une nouvelle manche via l'orchestrateur
@@ -518,6 +547,12 @@ public class VuePartie extends JPanel {
         peutTirer = true;
         boutonRester.setEnabled(true);
         boutonDouble.setEnabled(true);
+
+        // Activer le bouton Séparer si les conditions sont remplies
+        boolean peutSeparer = joueurPrincipal.getMainAIndex(0).peutEtreSplittee()
+                && joueurPrincipal.getBanque() >= mise;
+        boutonSeparer.setEnabled(peutSeparer);
+
         afficherMessage("À votre tour - Cliquez sur la pioche pour tirer ou Rester");
         rafraichirAffichage();
     }
@@ -527,17 +562,33 @@ public class VuePartie extends JPanel {
      */
     private void gererActionHit() {
         if (!pioche.estVide()) {
-            partie.joueurTire(0);
-            rafraichirAffichage();
-            // on termine immédiatement la manche si le joueur dépasse 21
-            if (CalculateurScore.aDepasse(joueurPrincipal.getMain())) {
-                peutTirer = false;
-                desactiverActionsPendantAnnonce();
-                afficherMainCompleteCroupier();
-                afficherMessage("Vous avez dépassé 21...");
-                afficherGagnantEtReset(false);
+            if (enModeSplit) {
+                // Tirer sur la main active
+                partie.joueurTire(0, mainActiveIndex);
+                rafraichirAffichage();
+
+                // Vérifier si cette main a dépassé
+                if (joueurPrincipal.aDepasse(mainActiveIndex)) {
+                    afficherMessage("Main " + (mainActiveIndex + 1) + " a dépassé 21");
+                    passerMainSuivante();
+                } else {
+                    afficherMessage("Main " + (mainActiveIndex + 1) + " - Tirez ou Restez");
+                }
             } else {
-                afficherMessage("À votre tour - Cliquez sur la pioche pour tirer ou Rester");
+                // Mode normal (une seule main)
+                partie.joueurTire(0);
+                rafraichirAffichage();
+
+                // on termine immédiatement la manche si le joueur dépasse 21
+                if (CalculateurScore.aDepasse(joueurPrincipal.getMain())) {
+                    peutTirer = false;
+                    desactiverActionsPendantAnnonce();
+                    afficherMainCompleteCroupier();
+                    afficherMessage("Vous avez dépassé 21...");
+                    afficherGagnantEtReset(false);
+                } else {
+                    afficherMessage("À votre tour - Cliquez sur la pioche pour tirer ou Rester");
+                }
             }
         }
     }
@@ -547,17 +598,52 @@ public class VuePartie extends JPanel {
      * termine
      */
     private void gererActionStand() {
-        peutTirer = false;
-        afficherMainCompleteCroupier();
-        desactiverActionsPendantAnnonce();
-        afficherMessage("Le croupier joue...");
+        if (enModeSplit) {
+            // En mode split, passer à la main suivante
+            passerMainSuivante();
+        } else {
+            // Mode normal
+            peutTirer = false;
+            afficherMainCompleteCroupier();
+            desactiverActionsPendantAnnonce();
+            afficherMessage("Le croupier joue...");
 
-        // L'orchestrateur gère le tour du croupier, calcule les résultats et applique
-        // les paiements
-        ResultatManche resultat = partie.terminerManche();
+            // L'orchestrateur gère le tour du croupier, calcule les résultats et applique
+            // les paiements
+            ResultatManche resultat = partie.terminerManche();
 
-        afficherResultat(resultat);
-        rafraichirAffichage();
+            afficherResultat(resultat);
+            rafraichirAffichage();
+        }
+    }
+
+    /**
+     * Passe à la main suivante lors d'un split, ou termine la manche si toutes les mains sont jouées
+     */
+    private void passerMainSuivante() {
+        mainActiveIndex++;
+
+        if (mainActiveIndex < joueurPrincipal.getNombreMains()) {
+            // Il reste des mains à jouer
+            afficherMessage("Jouez maintenant la main " + (mainActiveIndex + 1));
+            rafraichirAffichage();
+
+            // Si la main suivante est une main d'As splittés, elle ne peut tirer qu'une carte
+            // et a déjà reçu cette carte, donc on passe automatiquement à la suivante
+            if (!joueurPrincipal.getMainAIndex(mainActiveIndex).peutEncoreTirer()) {
+                passerMainSuivante();
+            }
+        } else {
+            // Toutes les mains ont été jouées, passer au tour du croupier
+            peutTirer = false;
+            afficherMainCompleteCroupier();
+            desactiverActionsPendantAnnonce();
+            afficherMessage("Le croupier joue...");
+
+            ResultatManche resultat = partie.terminerManche();
+            afficherResultatSplit(resultat);
+            rafraichirAffichage();
+        }
     }
 
     /**
@@ -600,6 +686,38 @@ public class VuePartie extends JPanel {
         }
     }
 
+    /**
+     * Gère l'action Séparer : sépare la main en deux mains distinctes
+     */
+    private void gererActionSeparer() {
+        // Vérifier que le joueur peut séparer
+        if (!joueurPrincipal.getMainAIndex(0).peutEtreSplittee()) {
+            return;
+        }
+
+        // Vérifier que le joueur a assez d'argent
+        if (joueurPrincipal.getBanque() < mise) {
+            afficherMessage("Solde insuffisant pour séparer");
+            return;
+        }
+
+        // Effectuer le split via l'orchestrateur
+        boolean succes = partie.effectuerSplit(0);
+
+        if (succes) {
+            enModeSplit = true;
+            mainActiveIndex = 0;
+
+            // Désactiver le bouton séparer et double
+            boutonSeparer.setEnabled(false);
+            boutonDouble.setEnabled(false);
+
+            // Rafraîchir l'affichage pour montrer les deux mains
+            rafraichirAffichage();
+            afficherMessage("Main séparée - Jouez la main 1");
+        }
+    }
+
     private void activerJetons(boolean actif) {
         for (JButton j : jetons)
             j.setEnabled(actif);
@@ -620,8 +738,47 @@ public class VuePartie extends JPanel {
      */
     private void rafraichirAffichage() {
         labelSolde.setText("Solde: $" + joueurPrincipal.getBanque());
-        labelMise.setText("Mise: $" + mise);
-        labelScoreJoueur.setText(scoreTexte(joueurPrincipal.getMain()));
+
+        // Afficher la mise totale (toutes les mains)
+        if (enModeSplit) {
+            int miseTotal = 0;
+            for (MainJoueur main : joueurPrincipal.getMains()) {
+                miseTotal += main.getMise();
+            }
+            labelMise.setText("Mise totale: $" + miseTotal);
+        } else {
+            labelMise.setText("Mise: $" + mise);
+        }
+
+        // Afficher le score du joueur (avec split si nécessaire)
+        if (enModeSplit) {
+            StringBuilder scores = new StringBuilder();
+            for (int i = 0; i < joueurPrincipal.getNombreMains(); i++) {
+                if (i == mainActiveIndex) {
+                    scores.append("[");
+                }
+                scores.append("M").append(i + 1).append(": ");
+                scores.append(joueurPrincipal.getScore(i));
+                if (i == mainActiveIndex) {
+                    scores.append("]");
+                }
+                if (i < joueurPrincipal.getNombreMains() - 1) {
+                    scores.append(" | ");
+                }
+            }
+            labelScoreJoueur.setText(scores.toString());
+
+            // Afficher toutes les cartes de toutes les mains dans le paquet visuel
+            mainJoueur.vider();
+            for (MainJoueur main : joueurPrincipal.getMains()) {
+                for (Carte carte : main.getMain().getCartes()) {
+                    mainJoueur.ajouterCarte(carte);
+                }
+            }
+        } else {
+            labelScoreJoueur.setText(scoreTexte(joueurPrincipal.getMain()));
+        }
+
         // Afficher le score du croupier basé sur ses cartes visibles si la 1re est
         // cachée
         labelScoreCroupier.setText(scoreTexteCroupier());
@@ -690,6 +847,59 @@ public class VuePartie extends JPanel {
         }
     }
 
+    /**
+     * Affiche le résultat d'une manche avec split (plusieurs mains)
+     *
+     * @param resultat Le résultat complet de la manche
+     */
+    private void afficherResultatSplit(ResultatManche resultat) {
+        List<Paiement> paiements = resultat.getPaiementsPour(joueurPrincipal);
+
+        if (paiements == null || paiements.isEmpty()) {
+            afficherGagnantEtReset(false);
+            return;
+        }
+
+        // Calculer le profit total
+        int profitTotal = resultat.getProfitTotal(joueurPrincipal);
+
+        // Déterminer si le joueur a globalement gagné
+        boolean aGagne = profitTotal > 0;
+
+        // Message détaillé
+        StringBuilder message = new StringBuilder();
+        for (int i = 0; i < paiements.size(); i++) {
+            Paiement p = paiements.get(i);
+            message.append("Main ").append(i + 1).append(": ");
+            switch (p.getTypeResultat()) {
+                case VICTOIRE:
+                    message.append("Victoire (+" + p.getProfit() + "$)");
+                    break;
+                case BLACKJACK:
+                    message.append("21! (+" + p.getProfit() + "$)");
+                    break;
+                case PUSH:
+                    message.append("Push");
+                    break;
+                case PERTE:
+                    message.append("Perdu");
+                    break;
+            }
+            if (i < paiements.size() - 1) {
+                message.append(" | ");
+            }
+        }
+
+        if (profitTotal > 0) {
+            message.append(" - Total: +").append(profitTotal).append("$");
+        } else if (profitTotal < 0) {
+            message.append(" - Total: ").append(profitTotal).append("$");
+        }
+
+        afficherMessage(message.toString());
+        afficherGagnantEtReset(aGagne || profitTotal == 0);
+    }
+
     private void desactiverActionsPendantAnnonce() {
         peutTirer = false;
         boutonRester.setEnabled(false);
@@ -739,9 +949,20 @@ public class VuePartie extends JPanel {
         mainCroupier.vider();
         mainJoueur.vider();
         activerJetons(true);
+
+        // Réinitialiser les variables de split
+        enModeSplit = false;
+        mainActiveIndex = 0;
+
+        // Remettre la mise précédente (ou 0 si le joueur n'a plus assez d'argent)
+        if (misePrecedente > joueurPrincipal.getBanque()) {
+            mise = 0;
+        } else {
+            mise = misePrecedente;
+        }
+
         basculerEtatBoutonsInitial();
         carteCroupierCachee = true;
-        mise = 0;
         afficherMessage("Placez votre mise pour commencer");
         rafraichirAffichage();
         if (vueCroupier != null) {
@@ -793,28 +1014,7 @@ public class VuePartie extends JPanel {
         if (labelMessage != null) {
             labelMessage.setText(message);
             labelMessage.setVisible(true);
-            positionnerBandeau();
 
-            // Masquer le bandeau après 3 secondes pour tous les messages
-            Timer timer = new Timer(3000, e -> labelMessage.setVisible(false));
-            timer.setRepeats(false);
-            timer.start();
-        }
-    }
-
-    /**
-     * Positionne le bandeau au centre de la fenêtre
-     */
-    private void positionnerBandeau() {
-        if (labelMessage != null && labelMessage.getParent() != null) {
-            Dimension tailleBandeau = labelMessage.getPreferredSize();
-            int largeur = labelMessage.getParent().getWidth();
-            int hauteur = labelMessage.getParent().getHeight();
-
-            int x = 0;
-            int y = (hauteur - tailleBandeau.height) / 2;
-
-            labelMessage.setBounds(x, y, largeur, tailleBandeau.height);
         }
     }
 }

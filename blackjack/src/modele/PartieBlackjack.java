@@ -84,6 +84,40 @@ public class PartieBlackjack {
         this.joueurs.get(joueurActif).recevoirCarte(this.sabot.retirerPremiereCarte());
     }
 
+    /**
+     * Fait tirer une carte à une main spécifique d'un joueur
+     *
+     * @param joueurActif Index du joueur
+     * @param indexMain   Index de la main du joueur
+     */
+    public void joueurTire(int joueurActif, int indexMain) {
+        System.out.println(this.sabot.getCarte(0));
+        this.joueurs.get(joueurActif).recevoirCarte(this.sabot.retirerPremiereCarte(), indexMain);
+    }
+
+    /**
+     * Effectue un split pour un joueur
+     * Sépare sa main en deux mains distinctes et distribue une carte à chaque
+     *
+     * @param joueurActif Index du joueur qui split
+     * @return true si le split a réussi, false sinon
+     */
+    public boolean effectuerSplit(int joueurActif) {
+        Joueur joueur = joueurs.get(joueurActif);
+
+        // Tenter le split
+        boolean succes = joueur.separer();
+
+        if (succes) {
+            // Distribuer une carte à chaque nouvelle main
+            joueur.recevoirCarte(sabot.retirerPremiereCarte(), 0);
+            joueur.recevoirCarte(sabot.retirerPremiereCarte(), 1);
+            this.etat = EtatPartie.TOUR_JOUEUR_SPLIT;
+        }
+
+        return succes;
+    }
+
     public void jouerTourCroupier() {
         this.croupier.revelerCartes();
         
@@ -169,7 +203,7 @@ public class PartieBlackjack {
         List<Joueur> gagnants = determinerGagnants();
 
         // Calculer les paiements
-        Map<Joueur, Paiement> paiements = ServicePaiement.calculerPaiements(
+        Map<Joueur, List<Paiement>> paiements = ServicePaiement.calculerPaiements(
                 joueurs, gagnants, croupier
         );
 
@@ -193,17 +227,19 @@ public class PartieBlackjack {
         croupier.revelerCartes();
 
         // Calculer le paiement pour le joueur principal
-        Map<Joueur, Paiement> paiements = new HashMap<>();
+        Map<Joueur, List<Paiement>> paiements = new HashMap<>();
         List<Joueur> gagnants = new ArrayList<>();
 
         for (Joueur joueur : joueurs) {
-            Paiement paiement = ServicePaiement.calculerPaiementBlackjack(
+            List<Paiement> paiementsJoueur = ServicePaiement.calculerPaiementBlackjack(
                     joueur, resultatBlackjack
             );
-            paiements.put(joueur, paiement);
+            paiements.put(joueur, paiementsJoueur);
 
             // Si le joueur gagne ou fait push, l'ajouter aux "gagnants"
-            if (paiement.getTypeResultat() != TypeResultat.PERTE) {
+            // On vérifie le premier (et seul) paiement car pas de split au blackjack naturel
+            if (!paiementsJoueur.isEmpty() &&
+                paiementsJoueur.get(0).getTypeResultat() != TypeResultat.PERTE) {
                 gagnants.add(joueur);
             }
         }

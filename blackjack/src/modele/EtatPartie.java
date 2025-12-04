@@ -13,6 +13,9 @@ public enum EtatPartie {
     /** Tour du joueur (Hit/Stand/Double) */
     TOUR_JOUEUR,
 
+    /** Tour du joueur après un split (gère plusieurs mains) */
+    TOUR_JOUEUR_SPLIT,
+
     /** Tour du croupier (tire jusqu'à 17+) */
     TOUR_CROUPIER,
 
