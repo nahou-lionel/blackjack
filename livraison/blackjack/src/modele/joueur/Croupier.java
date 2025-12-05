@@ -1,6 +1,5 @@
 package modele.joueur;
 
-import modele.strategie.StrategieConservatrice;
 import modele.strategie.StrategieCroupier;
 
 public class Croupier extends Joueur {
@@ -10,7 +9,7 @@ public class Croupier extends Joueur {
     public Croupier() {
         super("Croupier");
         this.cartesCachees = true;
-        this.strategie = new StrategieConservatrice();
+        this.strategie = new StrategieCroupier();
     }
 
     public StrategieCroupier getStrategieCroupier() {
