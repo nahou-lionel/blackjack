@@ -99,8 +99,8 @@ public class VuePartie extends JPanel {
         setPreferredSize(new Dimension(1080, 720));
         setLayout(new BorderLayout());
 
-        // creer des mains (1 jeu pour tester le rechargement plus rapidement)
-        pioche = Paquet.creerPaquetMultiple(1);
+        // creer des mains (2 par défaut)
+        pioche = Paquet.creerPaquetMultiple(2);
         pioche.melanger();
 
         croupier = new Croupier();
