@@ -8,8 +8,6 @@ import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ComponentAdapter;
@@ -21,6 +19,7 @@ import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
+import javax.swing.JComponent;
 import javax.swing.JLayeredPane;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -42,6 +41,12 @@ import modele.ResultatBlackjack;
 import modele.ResultatManche;
 
 public class VuePartie extends JPanel {
+
+    private static final Color VERT_TABLE = new Color(8, 102, 60);
+    private static final Color VERT_TABLE_SOMBRE = new Color(4, 70, 42);
+    private static final Color ACCENT_AMBRE = new Color(255, 196, 92);
+    private static final Color ACCENT_TURQUOISE = new Color(0, 170, 150);
+    private static final Color PANNEAU_NUIT = new Color(24, 28, 38, 210);
 
     // Les Paquets
     private Paquet pioche;
@@ -89,7 +94,7 @@ public class VuePartie extends JPanel {
 
     public VuePartie() {
 
-        setBackground(new Color(10, 106, 51));
+        setBackground(VERT_TABLE);
         setPreferredSize(new Dimension(1080, 720));
         setLayout(new BorderLayout());
 
@@ -142,60 +147,67 @@ public class VuePartie extends JPanel {
         JPanel zoneCentre = creerZoneCentre();
         add(zoneCentre, BorderLayout.CENTER);
 
-        // Panel actions et mises
-        JPanel panelActions = new JPanel(new BorderLayout());
-        panelActions.setOpaque(false);
-        JPanel zoneActions = creerZoneActions();
-        JPanel zoneMises = creerZoneMises();
-        panelActions.add(zoneActions, BorderLayout.NORTH);
-        panelActions.add(zoneMises, BorderLayout.SOUTH);
-        add(panelActions, BorderLayout.SOUTH);
-
         // Démarrer la partie
         rafraichirAffichage();
         basculerEtatBoutonsInitial();
     }
 
     private JPanel creerBarreHaut() {
-        JPanel panelHaut = new JPanel(new BorderLayout());
-        panelHaut.setOpaque(true);
-        panelHaut.setBackground(new Color(14, 14, 14));
-        panelHaut.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        JPanel panelHaut = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                super.paintComponent(g);
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING,
+                        java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                java.awt.GradientPaint gp = new java.awt.GradientPaint(0, 0, VERT_TABLE_SOMBRE, 0, getHeight(),
+                        VERT_TABLE);
+                g2.setPaint(gp);
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 0, 0);
+                g2.dispose();
+            }
+        };
+        panelHaut.setOpaque(false);
+        panelHaut.setBorder(BorderFactory.createEmptyBorder(12, 24, 12, 24));
 
-        // Panel central avec titre et message
         JPanel panelCentre = new JPanel();
         panelCentre.setOpaque(false);
         panelCentre.setLayout(new BoxLayout(panelCentre, BoxLayout.Y_AXIS));
 
         labelTitre = new JLabel("BLACKJACK", SwingConstants.CENTER);
-        labelTitre.setFont(new Font("SansSerif", Font.BOLD, 24));
-        labelTitre.setForeground(Color.WHITE);
+        labelTitre.setFont(new Font("SansSerif", Font.BOLD, 26));
+        labelTitre.setForeground(ACCENT_AMBRE);
         labelTitre.setAlignmentX(CENTER_ALIGNMENT);
 
         labelMessage = new JLabel("Placez votre mise pour commencer", SwingConstants.CENTER);
-        labelMessage.setFont(new Font("SansSerif", Font.ITALIC, 14));
-        labelMessage.setForeground(new Color(255, 215, 0));
+        labelMessage.setFont(new Font("SansSerif", Font.BOLD, 14));
+        labelMessage.setForeground(new Color(50, 40, 0));
+        labelMessage.setOpaque(true);
+        labelMessage.setBackground(new Color(255, 242, 210));
+        labelMessage.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(255, 222, 140)),
+                BorderFactory.createEmptyBorder(6, 14, 6, 14)));
         labelMessage.setAlignmentX(CENTER_ALIGNMENT);
 
         panelCentre.add(labelTitre);
-        panelCentre.add(Box.createVerticalStrut(5));
+        panelCentre.add(Box.createVerticalStrut(8));
         panelCentre.add(labelMessage);
 
         panelHaut.add(panelCentre, BorderLayout.CENTER);
         return panelHaut;
     }
 
-    private JPanel creerZoneCentre() {
+        private JPanel creerZoneCentre() {
         JPanel centre = new JPanel(new BorderLayout());
         centre.setOpaque(false);
 
-        // Bloc solde et mise en haut à droite
+        // Bloc solde et mise
         JPanel panelInfo = new JPanel();
         panelInfo.setOpaque(true);
-        panelInfo.setBackground(new Color(0, 0, 0, 150));
+        panelInfo.setBackground(PANNEAU_NUIT);
         panelInfo.setLayout(new BoxLayout(panelInfo, BoxLayout.Y_AXIS));
         panelInfo.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(255, 215, 0), 2),
+                BorderFactory.createLineBorder(ACCENT_AMBRE, 1, true),
                 BorderFactory.createEmptyBorder(10, 15, 10, 15)));
 
         labelSolde = new JLabel();
@@ -205,40 +217,52 @@ public class VuePartie extends JPanel {
 
         labelMise = new JLabel();
         labelMise.setFont(new Font("SansSerif", Font.BOLD, 16));
-        labelMise.setForeground(new Color(255, 215, 0));
+        labelMise.setForeground(ACCENT_TURQUOISE);
         labelMise.setAlignmentX(CENTER_ALIGNMENT);
 
         panelInfo.add(labelSolde);
         panelInfo.add(Box.createVerticalStrut(5));
         panelInfo.add(labelMise);
 
-        // Panel en haut avec pioche à gauche et info à droite
+        // Bandeau haut: pioche + actions + mises/info
         JPanel panelHautCentre = new JPanel(new BorderLayout());
         panelHautCentre.setOpaque(false);
-        panelHautCentre.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+        panelHautCentre.setBorder(BorderFactory.createEmptyBorder(8, 12, 6, 12));
 
         JPanel panelPioche = new JPanel();
         panelPioche.setOpaque(false);
         panelPioche.add(vuePioche);
 
-        JPanel containerInfo = new JPanel();
-        containerInfo.setOpaque(false);
-        containerInfo.add(panelInfo);
+        JPanel blocActions = creerZoneActions();
+        blocActions.setOpaque(false);
+
+        JPanel blocDroite = new JPanel();
+        blocDroite.setOpaque(false);
+        blocDroite.setLayout(new BoxLayout(blocDroite, BoxLayout.Y_AXIS));
+        blocDroite.add(panelInfo);
+        blocDroite.add(Box.createVerticalStrut(6));
+        blocDroite.add(creerZoneMises());
 
         panelHautCentre.add(panelPioche, BorderLayout.WEST);
-        panelHautCentre.add(containerInfo, BorderLayout.EAST);
+        panelHautCentre.add(blocActions, BorderLayout.CENTER);
+        panelHautCentre.add(blocDroite, BorderLayout.EAST);
 
         centre.add(panelHautCentre, BorderLayout.NORTH);
 
-        // Zone des cartes - GridLayout pour partage équitable de l'espace
-        JPanel plateau = new JPanel(new GridLayout(2, 1, 0, 20));
+        // Zone des cartes
+        JPanel plateau = new JPanel(new GridBagLayout());
         plateau.setOpaque(false);
-        plateau.setBorder(BorderFactory.createEmptyBorder(20, 10, 20, 10));
+        plateau.setBorder(BorderFactory.createEmptyBorder(10, 12, 12, 12));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.weightx = 1.0;
+        gbc.fill = GridBagConstraints.BOTH;
 
         // Panel Croupier
         JPanel blocCroupier = new JPanel(new BorderLayout());
         blocCroupier.setOpaque(false);
-        blocCroupier.setBorder(BorderFactory.createEmptyBorder(10, 0, 30, 0));
+        blocCroupier.setBorder(BorderFactory.createEmptyBorder(6, 0, 12, 0));
+        blocCroupier.setAlignmentX(CENTER_ALIGNMENT);
 
         // Couche: vue + overlay dos de carte
         coucheCroupier = new JLayeredPane();
@@ -286,16 +310,14 @@ public class VuePartie extends JPanel {
             }
         });
 
-        JPanel centreCroupier = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
-        centreCroupier.setOpaque(false);
-        centreCroupier.add(coucheCroupier);
+        JPanel centreCroupier = creerBandeauCartes(coucheCroupier);
 
         JLabel titreCroupier = new JLabel("CROUPIER", SwingConstants.CENTER);
         titreCroupier.setFont(new Font("SansSerif", Font.BOLD, 16));
         titreCroupier.setForeground(Color.WHITE);
         labelScoreCroupier = new JLabel("0", SwingConstants.CENTER);
         labelScoreCroupier.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        labelScoreCroupier.setForeground(Color.WHITE);
+        labelScoreCroupier.setForeground(ACCENT_AMBRE);
 
         JPanel footerCroupier = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 0));
         footerCroupier.setOpaque(false);
@@ -310,18 +332,17 @@ public class VuePartie extends JPanel {
         // Panel Joueur
         JPanel blocJoueur = new JPanel(new BorderLayout());
         blocJoueur.setOpaque(false);
-        blocJoueur.setBorder(BorderFactory.createEmptyBorder(30, 0, 10, 0));
+        blocJoueur.setBorder(BorderFactory.createEmptyBorder(12, 0, 6, 0));
+        blocJoueur.setAlignmentX(CENTER_ALIGNMENT);
 
-        JPanel contJoueur = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
-        contJoueur.setOpaque(false);
-        contJoueur.add(vueJoueur);
+        JPanel contJoueur = creerBandeauCartes(vueJoueur);
 
         JLabel titreJoueur = new JLabel("JOUEUR", SwingConstants.CENTER);
         titreJoueur.setFont(new Font("SansSerif", Font.BOLD, 16));
         titreJoueur.setForeground(Color.WHITE);
         labelScoreJoueur = new JLabel("0", SwingConstants.CENTER);
         labelScoreJoueur.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        labelScoreJoueur.setForeground(Color.WHITE);
+        labelScoreJoueur.setForeground(ACCENT_AMBRE);
 
         JPanel footerJoueur = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 0));
         footerJoueur.setOpaque(false);
@@ -333,11 +354,50 @@ public class VuePartie extends JPanel {
         blocJoueur.add(contJoueur, BorderLayout.CENTER);
         blocJoueur.add(footerJoueur, BorderLayout.SOUTH);
 
-        plateau.add(blocCroupier);
-        plateau.add(blocJoueur);
+        gbc.gridy = 0;
+        gbc.weighty = 1.0;
+        gbc.insets = new java.awt.Insets(0, 0, 6, 0);
+        plateau.add(blocCroupier, gbc);
+
+        gbc.gridy = 1;
+        gbc.weighty = 1.0;
+        gbc.insets = new java.awt.Insets(0, 0, 0, 0);
+        plateau.add(blocJoueur, gbc);
 
         centre.add(plateau, BorderLayout.CENTER);
         return centre;
+    }
+
+    private JPanel creerBandeauCartes(JComponent contenu) {
+        JPanel supportCentre = new JPanel(new FlowLayout(FlowLayout.CENTER, 18, 12));
+        supportCentre.setOpaque(false);
+        supportCentre.add(contenu);
+
+        Dimension contenuPref = contenu.getPreferredSize();
+        int bandeauHeight = contenuPref.height + 40;
+
+        JPanel bandeau = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(java.awt.Graphics g) {
+                super.paintComponent(g);
+                java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
+                g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING,
+                        java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
+                int arc = 24;
+                g2.setPaint(new java.awt.GradientPaint(0, 0, new Color(0, 0, 0, 90), 0, getHeight(),
+                        new Color(255, 255, 255, 30)));
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), arc, arc);
+                g2.setColor(new Color(255, 255, 255, 50));
+                g2.setStroke(new java.awt.BasicStroke(2f));
+                g2.drawRoundRect(1, 1, getWidth() - 2, getHeight() - 2, arc, arc);
+                g2.dispose();
+            }
+        };
+        bandeau.setOpaque(false);
+        bandeau.setBorder(BorderFactory.createEmptyBorder(12, 16, 12, 16));
+        bandeau.setMinimumSize(new Dimension(200, bandeauHeight));
+        bandeau.add(supportCentre, BorderLayout.CENTER);
+        return bandeau;
     }
 
     private JPanel creerZoneActions() {
@@ -782,7 +842,9 @@ public class VuePartie extends JPanel {
         // Afficher le score du croupier basé sur ses cartes visibles si la 1re est
         // cachée
         labelScoreCroupier.setText(scoreTexteCroupier());
+        vueCroupier.setMasquerPremiereCarte(carteCroupierCachee);
         mettreEnPlaceCoucheCroupier();
+        verrouillerSiSoldeVide();
         revalidate();
         repaint();
     }
@@ -963,7 +1025,13 @@ public class VuePartie extends JPanel {
 
         basculerEtatBoutonsInitial();
         carteCroupierCachee = true;
-        afficherMessage("Placez votre mise pour commencer");
+        if (joueurPrincipal.getBanque() <= 0) {
+            afficherMessage("Solde à zéro : vous ne pouvez plus jouer");
+            activerJetons(false);
+            boutonMiser.setEnabled(false);
+        } else {
+            afficherMessage("Placez votre mise pour commencer");
+        }
         rafraichirAffichage();
         if (vueCroupier != null) {
             vueCroupier.revalidate();
@@ -999,11 +1067,33 @@ public class VuePartie extends JPanel {
         if (coucheCroupier == null || vueCroupier == null)
             return;
         Dimension d = vueCroupier.getPreferredSize();
+        if (coucheCroupier.getParent() != null && coucheCroupier.getParent().getWidth() > 0) {
+            d = new Dimension(Math.max(d.width, coucheCroupier.getParent().getWidth()), d.height);
+        }
         coucheCroupier.setPreferredSize(d);
+        coucheCroupier.setMinimumSize(d);
         vueCroupier.setBounds(0, 0, d.width, d.height);
         if (overlayCroupier != null) {
-            overlayCroupier.setBounds(20, 20, 70, 100);
-            overlayCroupier.setVisible(carteCroupierCachee && mainCroupier.getCartes().size() >= 1);
+            overlayCroupier.setVisible(false);
+        }
+    }
+
+    private void positionnerOverlayCroupier() {
+        int largeurVue = vueCroupier.getWidth();
+        if (largeurVue <= 0) {
+            largeurVue = vueCroupier.getPreferredSize().width;
+        }
+        int startX = Math.max(20, (largeurVue - 70) / 2);
+        overlayCroupier.setBounds(startX, 20, 70, 100);
+        overlayCroupier.setVisible(carteCroupierCachee && mainCroupier.getCartes().size() >= 1);
+    }
+
+    private void verrouillerSiSoldeVide() {
+        if (joueurPrincipal != null && joueurPrincipal.getBanque() <= 0) {
+            mise = 0;
+            misePrecedente = 0;
+            activerJetons(false);
+            boutonMiser.setEnabled(false);
         }
     }
 
@@ -1018,3 +1108,4 @@ public class VuePartie extends JPanel {
         }
     }
 }
+
