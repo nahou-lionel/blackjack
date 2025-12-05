@@ -575,7 +575,7 @@ public class VuePartie extends JPanel {
         JPanel ligneMiseActions = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 6));
         ligneMiseActions.setOpaque(false);
 
-        boutonResetMise = creerBoutonAction("Reset Bet", new Color(80, 80, 80));
+        boutonResetMise = creerBoutonAction("Mise à 0", new Color(80, 80, 80));
         boutonResetMise.addActionListener(e -> {
             mise = 0;
             rafraichirAffichage();

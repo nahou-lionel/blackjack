@@ -1,4 +1,5 @@
 package vue;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
@@ -19,15 +20,15 @@ import javax.swing.JPanel;
 
 public class VueDepart extends JPanel {
     private Image imageDeFond;
-    private static  String CHEMIN_IMAGE = "/assets/blackjack_image.png";
-    private  JButton boutonPlay;
+    private static String CHEMIN_IMAGE = "/assets/blackjack_image.png";
+    private JButton boutonPlay;
     private boolean avecRobot;
     private String typeStrategie;
 
     /**
      * Constructeur avec paramètres pour configuration du robot
      *
-     * @param avecRobot true pour jouer avec un robot
+     * @param avecRobot     true pour jouer avec un robot
      * @param typeStrategie "simple" ou "optimal"
      */
     public VueDepart(boolean avecRobot, String typeStrategie) {
@@ -42,19 +43,19 @@ public class VueDepart extends JPanel {
         if (url != null) {
             this.imageDeFond = new ImageIcon(url).getImage();
         } else {
-            this.imageDeFond = null; 
+            this.imageDeFond = null;
         }
 
-        this.boutonPlay = new JButton("play");
+        this.boutonPlay = new JButton("Jouer");
         this.boutonPlay.setFont(new Font("SansSerif", Font.BOLD, 28));
-        Color colorBoutonPlay = new Color(0,114,187);
+        Color colorBoutonPlay = new Color(0, 114, 187);
         this.boutonPlay.setBackground(colorBoutonPlay);
         this.boutonPlay.setForeground(Color.WHITE);
         this.boutonPlay.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         this.boutonPlay.setFocusPainted(false);
         this.boutonPlay.setRolloverEnabled(true);
         this.boutonPlay.setPreferredSize(new Dimension(320, 72));
-        
+
         JPanel bandeauBas = new JPanel();
         bandeauBas.setLayout(new GridBagLayout());
         bandeauBas.setOpaque(false);
@@ -68,7 +69,6 @@ public class VueDepart extends JPanel {
         add(bandeauBas, BorderLayout.SOUTH);
     }
 
-
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -80,8 +80,8 @@ public class VueDepart extends JPanel {
         }
     }
 
-    public JButton getBoutonPlay() { 
-        return boutonPlay; 
+    public JButton getBoutonPlay() {
+        return boutonPlay;
     }
 
     /**
