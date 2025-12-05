@@ -1350,15 +1350,3 @@ public class VuePartie extends JPanel {
         return String.join(" | ", parties);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
