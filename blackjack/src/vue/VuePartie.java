@@ -25,9 +25,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.Timer;
-
 import cartes.modele.Carte;
-import cartes.modele.Hauteur;
 import cartes.modele.Paquet;
 import cartes.vue.VuePaquetCache;
 import cartes.vue.VuePaquetVisible;
@@ -1078,15 +1076,6 @@ public class VuePartie extends JPanel {
         }
     }
 
-    private void positionnerOverlayCroupier() {
-        int largeurVue = vueCroupier.getWidth();
-        if (largeurVue <= 0) {
-            largeurVue = vueCroupier.getPreferredSize().width;
-        }
-        int startX = Math.max(20, (largeurVue - 70) / 2);
-        overlayCroupier.setBounds(startX, 20, 70, 100);
-        overlayCroupier.setVisible(carteCroupierCachee && mainCroupier.getCartes().size() >= 1);
-    }
 
     private void verrouillerSiSoldeVide() {
         if (joueurPrincipal != null && joueurPrincipal.getBanque() <= 0) {
