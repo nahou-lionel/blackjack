@@ -30,11 +30,11 @@ public class Joueur {
         return this.nom;
     }
 
-    public int getBanque(){
+    public int getBanque() {
         return this.banque;
     }
 
-    public void setBanque(int banque){
+    public void setBanque(int banque) {
         this.banque = banque;
     }
 
@@ -44,7 +44,7 @@ public class Joueur {
      *
      * @return Le paquet de la première main
      */
-    public Paquet getMain(){
+    public Paquet getMain() {
         return this.mains.get(0).getMain();
     }
 
@@ -204,18 +204,13 @@ public class Joueur {
         mains.add(new MainJoueur(0));
     }
 
-    // // Cette méthode permet au joueur de rester
-    // public Action rester(){
-    //     return Action.RESTER;
-    // }
-
-    // // Cette méthode permet au joueur de tirer
-    // public Action tirer(){
-    //     return Action.TIRER;
-    // }
-
-    // // Cette méthode permet au joueur de doubler
-    // public Action doubler(){
-    //     return Action.DOUBLER;
-    // }
+    /**
+     * Indique si ce joueur est un robot
+     * Méthode surchargée par JoueurRobot
+     *
+     * @return false pour un joueur humain, true pour un robot
+     */
+    public boolean estRobot() {
+        return false;
+    }
 }

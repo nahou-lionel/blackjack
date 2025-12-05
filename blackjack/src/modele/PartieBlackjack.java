@@ -62,7 +62,13 @@ public class PartieBlackjack {
         // Vider les mains et réinitialiser les joueurs (important pour le split)
         croupier.getMain().vider();
         for (Joueur joueur : joueurs) {
-            joueur.reinitialiser(); // Réinitialise toutes les mains (après split)
+            // Pour les robots, juste vider la main pour garder la même référence
+            // Pour les joueurs humains, reinitialiser complètement (pour gérer le split)
+            if (joueur.estRobot()) {
+                joueur.getMain().vider();
+            } else {
+                joueur.reinitialiser(); // Réinitialise toutes les mains (après split)
+            }
         }
 
         // Réinitialiser la carte cachée du croupier
