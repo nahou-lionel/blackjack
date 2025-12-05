@@ -21,8 +21,19 @@ public class VueDepart extends JPanel {
     private Image imageDeFond;
     private static  String CHEMIN_IMAGE = "/assets/blackjack_image.png";
     private  JButton boutonPlay;
+    private boolean avecRobot;
+    private String typeStrategie;
 
-    public VueDepart(){
+    /**
+     * Constructeur avec paramètres pour configuration du robot
+     *
+     * @param avecRobot true pour jouer avec un robot
+     * @param typeStrategie "simple" ou "optimal"
+     */
+    public VueDepart(boolean avecRobot, String typeStrategie) {
+        this.avecRobot = avecRobot;
+        this.typeStrategie = typeStrategie;
+
         setPreferredSize(new Dimension(1080, 720));
         setLayout(new BorderLayout());
         setBackground(Color.BLACK);
@@ -73,8 +84,13 @@ public class VueDepart extends JPanel {
         return boutonPlay; 
     }
 
-    public void demarrerPartie(JFrame frame){
-        VuePartie partie = new VuePartie();
+    /**
+     * Démarre une partie de Blackjack avec les paramètres configurés
+     *
+     * @param frame La fenêtre principale
+     */
+    public void demarrerPartie(JFrame frame) {
+        VuePartie partie = new VuePartie(avecRobot, typeStrategie);
         frame.setContentPane(partie);
         frame.repaint();
         frame.revalidate();

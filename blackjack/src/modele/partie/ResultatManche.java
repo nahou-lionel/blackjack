@@ -1,7 +1,10 @@
-package modele;
+package modele.partie;
 
 import java.util.List;
 import java.util.Map;
+
+import modele.joueur.Joueur;
+import modele.paiement.Paiement;
 
 /**
  * Représente le résultat complet d'une manche de Blackjack

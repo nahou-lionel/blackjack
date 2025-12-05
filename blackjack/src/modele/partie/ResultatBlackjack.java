@@ -1,4 +1,4 @@
-package modele;
+package modele.partie;
 
 /**
  * Représente le résultat de la vérification des blackjacks naturels

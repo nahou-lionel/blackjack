@@ -1,4 +1,4 @@
-package modele;
+package modele.paiement;
 
 /**
  * Représente un paiement effectué à un joueur à la fin d'une manche

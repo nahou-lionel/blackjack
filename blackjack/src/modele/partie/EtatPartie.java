@@ -1,4 +1,4 @@
-package modele;
+package modele.partie;
 
 /**
  * Représente les différents états d'une manche de Blackjack

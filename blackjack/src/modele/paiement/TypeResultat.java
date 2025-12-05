@@ -1,4 +1,4 @@
-package modele;
+package modele.paiement;
 
 /**
  * Représente le type de résultat d'une manche pour un joueur

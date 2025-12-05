@@ -1,6 +1,8 @@
-package modele;
+package modele.strategie;
 
 import cartes.modele.Carte;
+import cartes.modele.Hauteur;
+import modele.partie.Action;
 
 /**
  * Stratégie simple pour un joueur robot
@@ -35,5 +37,13 @@ public class StrategieSimple implements StrategieJoueur {
         }
 
         return mise;
+    }
+
+    @Override
+    public boolean doitSplitter(Carte cartePaire, Carte carteVisibleCroupier) {
+        // Stratégie simple : toujours splitter les As et les 8
+        // C'est une règle de base au Blackjack
+        Hauteur hauteur = cartePaire.getHauteur();
+        return hauteur == Hauteur.AS || hauteur == Hauteur.HUIT;
     }
 }

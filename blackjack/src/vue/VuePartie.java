@@ -7,8 +7,20 @@ import java.util.List;
 import javax.swing.*;
 import cartes.modele.*;
 import cartes.vue.*;
-import modele.*;
-import modele.Action;
+import modele.joueur.Croupier;
+import modele.joueur.Joueur;
+import modele.joueur.JoueurRobot;
+import modele.joueur.MainJoueur;
+import modele.paiement.Paiement;
+import modele.paiement.TypeResultat;
+import modele.partie.Action;
+import modele.partie.CalculateurScore;
+import modele.partie.PartieBlackjack;
+import modele.partie.ResultatBlackjack;
+import modele.partie.ResultatManche;
+import modele.strategie.StrategieJoueur;
+import modele.strategie.StrategieOptimale;
+import modele.strategie.StrategieSimple;
 
 public class VuePartie extends JPanel {
 
@@ -38,6 +50,9 @@ public class VuePartie extends JPanel {
 
     // Conteneur pour les mains du joueur (pour le split)
     private JPanel conteneursMainsJoueur;
+
+    // Conteneur pour les mains du robot (pour le split)
+    private JPanel conteneursMainsRobot;
 
     // Elements propre à la partie
     private JLabel labelTitre;
@@ -72,7 +87,13 @@ public class VuePartie extends JPanel {
     private int mainActiveIndex = 0; // Index de la main actuellement jouée (0 ou 1 après split)
     private boolean enModeSplit = false;
 
-    public VuePartie() {
+    /**
+     * Constructeur avec paramètres pour configuration du robot
+     *
+     * @param avecRobot     true pour jouer avec un robot
+     * @param typeStrategie "simple" ou "optimal"
+     */
+    public VuePartie(boolean avecRobot, String typeStrategie) {
 
         setBackground(VERT_TABLE);
         setPreferredSize(new Dimension(1080, 720));
@@ -85,24 +106,38 @@ public class VuePartie extends JPanel {
         croupier = new Croupier();
         joueurPrincipal = new Joueur("Joueur");
 
-        // Ajouter un joueur robot avec une stratégie simple
-        robot = new JoueurRobot("Robot", 1000, new StrategieSimple());
-
         List<Joueur> joueurs = new ArrayList<>();
         joueurs.add(joueurPrincipal);
-        joueurs.add(robot);
+
+        // Ajouter un joueur robot selon les paramètres
+        if (avecRobot) {
+            StrategieJoueur strategie;
+            if (typeStrategie.equalsIgnoreCase("optimal")) {
+                strategie = new StrategieOptimale();
+            } else {
+                strategie = new StrategieSimple();
+            }
+
+            robot = new JoueurRobot("Robot", 500, strategie);
+            joueurs.add(robot);
+            mainRobot = robot.getMain();
+        }
+
         partie = new PartieBlackjack(pioche, croupier, joueurs, 0);
 
         mainCroupier = croupier.getMain();
         mainJoueur = joueurPrincipal.getMain();
-        mainRobot = robot.getMain();
 
         // création des vues des mains avec couleur de fond verte
         Color fondVert = VERT_TABLE;
         vuePioche = new VuePaquetCache(pioche, fondVert);
         vueCroupier = new VuePaquetVisible(mainCroupier, fondVert);
         vueJoueur = new VuePaquetVisible(mainJoueur, fondVert);
-        vueRobot = new VuePaquetVisible(mainRobot, fondVert);
+
+        // Créer la vue du robot seulement si le robot existe
+        if (robot != null && mainRobot != null) {
+            vueRobot = new VuePaquetVisible(mainRobot, fondVert);
+        }
 
         // Ajouter un contrôleur pour cliquer sur la pioche
         vuePioche.addMouseListener(new java.awt.event.MouseAdapter() {
@@ -212,28 +247,31 @@ public class VuePartie extends JPanel {
         panelInfo.add(Box.createVerticalStrut(5));
         panelInfo.add(labelMise);
 
-        // Bloc solde et mise du robot
-        JPanel panelInfoRobot = new JPanel();
-        panelInfoRobot.setOpaque(true);
-        panelInfoRobot.setBackground(PANNEAU_NUIT);
-        panelInfoRobot.setLayout(new BoxLayout(panelInfoRobot, BoxLayout.Y_AXIS));
-        panelInfoRobot.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(150, 200, 255), 1, true),
-                BorderFactory.createEmptyBorder(10, 15, 10, 15)));
+        // Bloc solde et mise du robot (créé seulement si le robot existe)
+        JPanel panelInfoRobot = null;
+        if (robot != null) {
+            panelInfoRobot = new JPanel();
+            panelInfoRobot.setOpaque(true);
+            panelInfoRobot.setBackground(PANNEAU_NUIT);
+            panelInfoRobot.setLayout(new BoxLayout(panelInfoRobot, BoxLayout.Y_AXIS));
+            panelInfoRobot.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(new Color(150, 200, 255), 1, true),
+                    BorderFactory.createEmptyBorder(10, 15, 10, 15)));
 
-        labelSoldeRobot = new JLabel();
-        labelSoldeRobot.setFont(new Font("SansSerif", Font.BOLD, 15));
-        labelSoldeRobot.setForeground(new Color(200, 225, 255));
-        labelSoldeRobot.setAlignmentX(CENTER_ALIGNMENT);
+            labelSoldeRobot = new JLabel();
+            labelSoldeRobot.setFont(new Font("SansSerif", Font.BOLD, 15));
+            labelSoldeRobot.setForeground(new Color(200, 225, 255));
+            labelSoldeRobot.setAlignmentX(CENTER_ALIGNMENT);
 
-        labelMiseRobot = new JLabel();
-        labelMiseRobot.setFont(new Font("SansSerif", Font.BOLD, 15));
-        labelMiseRobot.setForeground(new Color(200, 225, 255));
-        labelMiseRobot.setAlignmentX(CENTER_ALIGNMENT);
+            labelMiseRobot = new JLabel();
+            labelMiseRobot.setFont(new Font("SansSerif", Font.BOLD, 15));
+            labelMiseRobot.setForeground(new Color(200, 225, 255));
+            labelMiseRobot.setAlignmentX(CENTER_ALIGNMENT);
 
-        panelInfoRobot.add(labelSoldeRobot);
-        panelInfoRobot.add(Box.createVerticalStrut(5));
-        panelInfoRobot.add(labelMiseRobot);
+            panelInfoRobot.add(labelSoldeRobot);
+            panelInfoRobot.add(Box.createVerticalStrut(5));
+            panelInfoRobot.add(labelMiseRobot);
+        }
 
         // Bandeau haut: pioche + actions/jetons + infos
         JPanel panelHautCentre = new JPanel(new BorderLayout());
@@ -268,10 +306,14 @@ public class VuePartie extends JPanel {
         blocDroite.setOpaque(false);
         blocDroite.setLayout(new BoxLayout(blocDroite, BoxLayout.Y_AXIS));
         panelInfo.setAlignmentX(RIGHT_ALIGNMENT);
-        panelInfoRobot.setAlignmentX(RIGHT_ALIGNMENT);
         blocDroite.add(panelInfo);
-        blocDroite.add(Box.createVerticalStrut(6));
-        blocDroite.add(panelInfoRobot);
+
+        // Ajouter les infos du robot seulement s'il existe
+        if (panelInfoRobot != null) {
+            panelInfoRobot.setAlignmentX(RIGHT_ALIGNMENT);
+            blocDroite.add(Box.createVerticalStrut(6));
+            blocDroite.add(panelInfoRobot);
+        }
 
         panelHautCentre.add(panelPioche, BorderLayout.WEST);
         panelHautCentre.add(centreActionsWrapper, BorderLayout.CENTER);
@@ -359,30 +401,36 @@ public class VuePartie extends JPanel {
         blocCroupier.add(centreCroupier, BorderLayout.CENTER);
         blocCroupier.add(footerCroupier, BorderLayout.SOUTH);
 
-        // Panel Robot
-        JPanel blocRobot = new JPanel(new BorderLayout());
-        blocRobot.setOpaque(false);
-        blocRobot.setBorder(BorderFactory.createEmptyBorder(6, 0, 6, 0));
-        blocRobot.setAlignmentX(CENTER_ALIGNMENT);
+        // Panel Robot (créé seulement si le robot existe)
+        JPanel blocRobot = null;
+        if (robot != null) {
+            blocRobot = new JPanel(new BorderLayout());
+            blocRobot.setOpaque(false);
+            blocRobot.setBorder(BorderFactory.createEmptyBorder(6, 0, 6, 0));
+            blocRobot.setAlignmentX(CENTER_ALIGNMENT);
 
-        JPanel contRobot = creerBandeauCartes(vueRobot);
+            // Conteneur dynamique pour les mains du robot (1 ou 2 selon split)
+            conteneursMainsRobot = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 12));
+            conteneursMainsRobot.setOpaque(false);
+            rafraichirAffichageMainsRobot(); // Initialiser avec une seule main
 
-        JLabel titreRobot = new JLabel("ROBOT", SwingConstants.CENTER);
-        titreRobot.setFont(new Font("SansSerif", Font.BOLD, 16));
-        titreRobot.setForeground(new Color(150, 200, 255)); // Bleu clair pour différencier
-        labelScoreRobot = new JLabel("0", SwingConstants.CENTER);
-        labelScoreRobot.setFont(new Font("SansSerif", Font.PLAIN, 14));
-        labelScoreRobot.setForeground(ACCENT_AMBRE);
+            JLabel titreRobot = new JLabel("ROBOT", SwingConstants.CENTER);
+            titreRobot.setFont(new Font("SansSerif", Font.BOLD, 16));
+            titreRobot.setForeground(new Color(150, 200, 255)); // Bleu clair pour différencier
+            labelScoreRobot = new JLabel("0", SwingConstants.CENTER);
+            labelScoreRobot.setFont(new Font("SansSerif", Font.PLAIN, 14));
+            labelScoreRobot.setForeground(ACCENT_AMBRE);
 
-        JPanel footerRobot = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 0));
-        footerRobot.setOpaque(false);
-        badgeRobot = creerBadgeGagnant();
-        footerRobot.add(titreRobot);
-        footerRobot.add(labelScoreRobot);
-        footerRobot.add(badgeRobot);
+            JPanel footerRobot = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 0));
+            footerRobot.setOpaque(false);
+            badgeRobot = creerBadgeGagnant();
+            footerRobot.add(titreRobot);
+            footerRobot.add(labelScoreRobot);
+            footerRobot.add(badgeRobot);
 
-        blocRobot.add(contRobot, BorderLayout.CENTER);
-        blocRobot.add(footerRobot, BorderLayout.SOUTH);
+            blocRobot.add(creerBandeauCartes(conteneursMainsRobot), BorderLayout.CENTER);
+            blocRobot.add(footerRobot, BorderLayout.SOUTH);
+        }
 
         // Panel Joueur
         JPanel blocJoueur = new JPanel(new BorderLayout());
@@ -418,12 +466,17 @@ public class VuePartie extends JPanel {
         gbc.insets = new java.awt.Insets(0, 0, 6, 0);
         plateau.add(blocCroupier, gbc);
 
-        gbc.gridy = 1;
-        gbc.weighty = 0.8;
-        gbc.insets = new java.awt.Insets(0, 0, 6, 0);
-        plateau.add(blocRobot, gbc);
+        // Ajouter le robot seulement s'il existe
+        if (blocRobot != null) {
+            gbc.gridy = 1;
+            gbc.weighty = 0.8;
+            gbc.insets = new java.awt.Insets(0, 0, 6, 0);
+            plateau.add(blocRobot, gbc);
+            gbc.gridy = 2;
+        } else {
+            gbc.gridy = 1;
+        }
 
-        gbc.gridy = 2;
         gbc.weighty = 1.0;
         gbc.insets = new java.awt.Insets(0, 0, 0, 0);
         plateau.add(blocJoueur, gbc);
@@ -934,11 +987,35 @@ public class VuePartie extends JPanel {
         // Rafraîchir l'affichage des mains (1 ou 2 selon le mode)
         rafraichirAffichageMainsJoueur();
 
-        // Afficher le score du robot
+        // Afficher le score du robot (gérer le split)
         if (robot != null) {
-            labelScoreRobot.setText(scoreTexte(robot.getMain()));
+            rafraichirAffichageMainsRobot();
+
+            if (robot.getNombreMains() > 1) {
+                // Le robot a splitté - afficher les scores des deux mains
+                StringBuilder scoresRobot = new StringBuilder();
+                for (int i = 0; i < robot.getNombreMains(); i++) {
+                    scoresRobot.append("M").append(i + 1).append(": ");
+                    scoresRobot.append(robot.getScore(i));
+                    if (i < robot.getNombreMains() - 1) {
+                        scoresRobot.append(" | ");
+                    }
+                }
+                labelScoreRobot.setText(scoresRobot.toString());
+
+                // Mise totale
+                int miseTotaleRobot = 0;
+                for (MainJoueur main : robot.getMains()) {
+                    miseTotaleRobot += main.getMise();
+                }
+                labelMiseRobot.setText("Mise robot: $" + miseTotaleRobot);
+            } else {
+                // Affichage normal
+                labelScoreRobot.setText(scoreTexte(robot.getMain()));
+                labelMiseRobot.setText("Mise robot: $" + robot.getMiseActuelle());
+            }
+
             labelSoldeRobot.setText("Solde robot: $" + robot.getBanque());
-            labelMiseRobot.setText("Mise robot: $" + robot.getMiseActuelle());
         }
 
         // Afficher le score du croupier basé sur ses cartes visibles si la 1re est
@@ -979,7 +1056,7 @@ public class VuePartie extends JPanel {
      *
      * @param resultat Le résultat complet de la manche
      */
-        private void afficherResultat(ResultatManche resultat) {
+    private void afficherResultat(ResultatManche resultat) {
         afficherMessage(construireMessageResultats(resultat));
         afficherBadgesEtReset(resultat);
     }
@@ -989,7 +1066,7 @@ public class VuePartie extends JPanel {
      *
      * @param resultat Le résultat complet de la manche
      */
-        private void afficherResultatSplit(ResultatManche resultat) {
+    private void afficherResultatSplit(ResultatManche resultat) {
         afficherMessage(construireMessageResultats(resultat));
         afficherBadgesEtReset(resultat);
     }
@@ -1003,8 +1080,6 @@ public class VuePartie extends JPanel {
         activerJetons(false);
     }
 
-
-    
     /**
      * Réinitialise le plateau pour préparer une nouvelle manche
      */
@@ -1022,10 +1097,10 @@ public class VuePartie extends JPanel {
         // Mettre à jour les références des mains après réinitialisation
         mainJoueur = joueurPrincipal.getMain();
 
-        // Pour le robot, juste vider la main au lieu de reinitialiser
-        // pour garder la même référence Paquet observée par vueRobot
-        if (robot != null && mainRobot != null) {
-            mainRobot.vider();
+        // Pour le robot, réinitialiser pour revenir à une seule main après split
+        if (robot != null) {
+            robot.reinitialiser();
+            mainRobot = robot.getMain();
         }
 
         // Remettre la mise précédente (ou 0 si le joueur n'a plus assez d'argent)
@@ -1178,8 +1253,66 @@ public class VuePartie extends JPanel {
     }
 
     /**
+     * Rafraîchit l'affichage des mains du robot (gère 1 ou 2 mains après un split)
+     */
+    private void rafraichirAffichageMainsRobot() {
+        if (conteneursMainsRobot == null || robot == null)
+            return;
+
+        conteneursMainsRobot.removeAll();
+
+        int nombreMains = robot.getNombreMains();
+
+        for (int i = 0; i < nombreMains; i++) {
+            Paquet mainActuelle = robot.getMainAIndex(i).getMain();
+
+            // Créer une vue pour cette main
+            Color fondVert = VERT_TABLE;
+            VuePaquetVisible vueMain = new VuePaquetVisible(mainActuelle, fondVert);
+
+            // Créer un conteneur pour cette main
+            JPanel conteneurMain = new JPanel();
+            conteneurMain.setLayout(new BoxLayout(conteneurMain, BoxLayout.Y_AXIS));
+            conteneurMain.setOpaque(false);
+
+            // Titre de la main
+            String titreMain = nombreMains > 1 ? "Main " + (i + 1) : "";
+
+            if (!titreMain.isEmpty()) {
+                JLabel labelTitreMain = new JLabel(titreMain, SwingConstants.CENTER);
+                labelTitreMain.setFont(new Font("SansSerif", Font.BOLD, 14));
+                labelTitreMain.setForeground(new Color(150, 200, 255)); // Bleu clair comme le robot
+                labelTitreMain.setAlignmentX(CENTER_ALIGNMENT);
+                conteneurMain.add(labelTitreMain);
+                conteneurMain.add(Box.createVerticalStrut(8));
+            }
+
+            // Ajouter la vue des cartes
+            vueMain.setAlignmentX(CENTER_ALIGNMENT);
+            conteneurMain.add(vueMain);
+
+            // Score de cette main
+            int scoreMain = CalculateurScore.calculerScore(mainActuelle);
+            JLabel labelScoreMain = new JLabel("Score: " + scoreMain, SwingConstants.CENTER);
+            labelScoreMain.setFont(new Font("SansSerif", Font.PLAIN, 13));
+            labelScoreMain.setForeground(ACCENT_AMBRE);
+            labelScoreMain.setAlignmentX(CENTER_ALIGNMENT);
+            conteneurMain.add(Box.createVerticalStrut(6));
+            conteneurMain.add(labelScoreMain);
+
+            // Bordure simple
+            conteneurMain.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+            conteneursMainsRobot.add(conteneurMain);
+        }
+
+        conteneursMainsRobot.revalidate();
+        conteneursMainsRobot.repaint();
+    }
+
+    /**
      * Fait jouer le robot automatiquement selon sa stratégie
-     * 
+     *
      * @param onFinish Action à exécuter quand le robot a fini
      */
     private void faireJouerRobot(Runnable onFinish) {
@@ -1201,23 +1334,76 @@ public class VuePartie extends JPanel {
         }
 
         final JoueurRobot robotFinal = robotJoueur;
-        int scoreRobot = robotFinal.getScore();
-        afficherMessage("Robot (score: " + scoreRobot + ") à son tour");
-
-        // Obtenir la carte visible du croupier
         final Carte carteVisibleCroupier = croupier.getMain().getCarte(1);
 
+        // Vérifier si le robot veut splitter
+        if (robotFinal.veutSplitter(carteVisibleCroupier)) {
+            afficherMessage("Robot décide de SPLIT !");
+
+            // Attendre un peu avant de splitter
+            Timer splitTimer = new Timer(1500, evt -> {
+                // Effectuer le split
+                int indexRobot = partie.getJoueurs().indexOf(robotFinal);
+                boolean splitReussi = partie.effectuerSplit(indexRobot);
+
+                if (splitReussi) {
+                    rafraichirAffichage();
+                    afficherMessage("Robot a splitté sa paire");
+
+                    // Jouer la première main, puis la deuxième
+                    Timer delayTimer = new Timer(1500, e -> {
+                        afficherMessage("Robot joue sa première main...");
+                        faireJouerRobotMain(robotFinal, 0, carteVisibleCroupier, () -> {
+                            // Première main terminée, jouer la deuxième
+                            Timer entreMainsTimer = new Timer(1500, e2 -> {
+                                afficherMessage("Robot joue sa deuxième main...");
+                                faireJouerRobotMain(robotFinal, 1, carteVisibleCroupier, onFinish);
+                            });
+                            entreMainsTimer.setRepeats(false);
+                            entreMainsTimer.start();
+                        });
+                    });
+                    delayTimer.setRepeats(false);
+                    delayTimer.start();
+                } else {
+                    afficherMessage("Split impossible, robot joue normalement");
+                    faireJouerRobotMain(robotFinal, 0, carteVisibleCroupier, onFinish);
+                }
+            });
+            splitTimer.setRepeats(false);
+            splitTimer.start();
+        } else {
+            // Pas de split, jouer normalement
+            int scoreRobot = robotFinal.getScore();
+            afficherMessage("Robot (score: " + scoreRobot + ") à son tour");
+            faireJouerRobotMain(robotFinal, 0, carteVisibleCroupier, onFinish);
+        }
+    }
+
+    /**
+     * Fait jouer une main spécifique du robot
+     *
+     * @param robotFinal           Le robot
+     * @param indexMain            L'index de la main à jouer
+     * @param carteVisibleCroupier La carte visible du croupier
+     * @param onFinish             Action à exécuter quand la main est terminée
+     */
+    private void faireJouerRobotMain(JoueurRobot robotFinal, int indexMain, Carte carteVisibleCroupier,
+            Runnable onFinish) {
         // Utiliser un Timer pour jouer sans bloquer l'interface
         final Timer[] timerRef = new Timer[1]; // Array pour permettre la référence récursive
         timerRef[0] = new Timer(1500, new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                int scoreActuel = robotFinal.getScore();
+                int scoreActuel = robotFinal.getScore(indexMain);
+                MainJoueur mainActuelle = robotFinal.getMainAIndex(indexMain);
 
                 // Si le robot a dépassé ou a 21, il arrête
                 if (scoreActuel >= 21) {
                     if (scoreActuel == 21) {
-                        afficherMessage("Robot atteint 21 !");
+                        String prefix = robotFinal.getNombreMains() > 1 ? "Robot (main " + (indexMain + 1) + ") "
+                                : "Robot ";
+                        afficherMessage(prefix + "atteint 21 !");
                     }
                     timerRef[0].stop();
                     // Exécuter la suite après un court délai
@@ -1230,22 +1416,43 @@ public class VuePartie extends JPanel {
                     return;
                 }
 
-                Action action = robotFinal.choisirAction(carteVisibleCroupier);
+                // Vérifier si la main ne peut plus tirer (cas des As splittés)
+                if (mainActuelle.estSplittee() && mainActuelle.getMain().getTaille() >= 2 &&
+                        mainActuelle.getMain().getCarte(0).getHauteur() == Hauteur.AS) {
+                    // Les As splittés ne peuvent tirer qu'une carte
+                    String prefix = robotFinal.getNombreMains() > 1 ? "Robot (main " + (indexMain + 1) + ") "
+                            : "Robot ";
+                    afficherMessage(prefix + "termine (As splitté, score: " + scoreActuel + ")");
+                    timerRef[0].stop();
+                    Timer finishTimer = new Timer(1500, evt -> {
+                        if (onFinish != null)
+                            onFinish.run();
+                    });
+                    finishTimer.setRepeats(false);
+                    finishTimer.start();
+                    return;
+                }
+
+                Action action = robotFinal.choisirAction(carteVisibleCroupier, indexMain);
+                String prefix = robotFinal.getNombreMains() > 1 ? "Robot (main " + (indexMain + 1) + ", score: "
+                        : "Robot (score: ";
 
                 if (action == Action.TIRER) {
-                    afficherMessage("Robot (score: " + scoreActuel + ") → TIRE");
+                    afficherMessage(prefix + scoreActuel + ") -> TIRE");
 
                     Carte nouvelleCarte = pioche.retirerPremiereCarte();
-                    robotFinal.recevoirCarte(nouvelleCarte);
-                    int nouveauScore = robotFinal.getScore();
+                    robotFinal.recevoirCarte(nouvelleCarte, indexMain);
+                    int nouveauScore = robotFinal.getScore(indexMain);
 
                     rafraichirAffichage();
 
-                    afficherMessage("Robot tire " + nouvelleCarte + " (score: " + nouveauScore + ")");
+                    String prefixResult = robotFinal.getNombreMains() > 1 ? "Robot (main " + (indexMain + 1) + ") "
+                            : "Robot ";
+                    afficherMessage(prefixResult + "tire " + nouvelleCarte + " (score: " + nouveauScore + ")");
 
                     // Vérifier si le robot a dépassé
-                    if (CalculateurScore.aDepasse(robotFinal.getMain())) {
-                        afficherMessage("Robot dépasse 21 !");
+                    if (robotFinal.aDepasse(indexMain)) {
+                        afficherMessage(prefixResult + "dépasse 21 !");
                         timerRef[0].stop();
                         // Exécuter la suite après un court délai
                         Timer finishTimer = new Timer(1500, evt -> {
@@ -1255,8 +1462,64 @@ public class VuePartie extends JPanel {
                         finishTimer.setRepeats(false);
                         finishTimer.start();
                     }
+                } else if (action == Action.DOUBLER) {
+                    int miseActuelle = mainActuelle.getMise();
+
+                    // Vérifier si le robot a assez d'argent pour doubler
+                    if (robotFinal.getBanque() >= miseActuelle) {
+                        afficherMessage(prefix + scoreActuel + ") -> DOUBLE");
+
+                        // Doubler la mise
+                        robotFinal.miser(miseActuelle);
+                        mainActuelle.setMise(miseActuelle * 2);
+
+                        // Tirer exactement une carte
+                        Carte nouvelleCarte = pioche.retirerPremiereCarte();
+                        robotFinal.recevoirCarte(nouvelleCarte, indexMain);
+                        int nouveauScore = robotFinal.getScore(indexMain);
+
+                        rafraichirAffichage();
+
+                        String prefixResult = robotFinal.getNombreMains() > 1 ? "Robot (main " + (indexMain + 1) + ") "
+                                : "Robot ";
+                        afficherMessage(
+                                prefixResult + "double et tire " + nouvelleCarte + " (score: " + nouveauScore + ")");
+
+                        // Arrêter après avoir tiré une seule carte
+                        timerRef[0].stop();
+                        Timer finishTimer = new Timer(1500, evt -> {
+                            if (onFinish != null)
+                                onFinish.run();
+                        });
+                        finishTimer.setRepeats(false);
+                        finishTimer.start();
+                    } else {
+                        // Pas assez d'argent pour doubler, tirer normalement
+                        afficherMessage(prefix + scoreActuel + ") -> TIRE (pas assez pour doubler)");
+
+                        Carte nouvelleCarte = pioche.retirerPremiereCarte();
+                        robotFinal.recevoirCarte(nouvelleCarte, indexMain);
+                        int nouveauScore = robotFinal.getScore(indexMain);
+
+                        rafraichirAffichage();
+
+                        String prefixResult = robotFinal.getNombreMains() > 1 ? "Robot (main " + (indexMain + 1) + ") "
+                                : "Robot ";
+                        afficherMessage(prefixResult + "tire " + nouvelleCarte + " (score: " + nouveauScore + ")");
+
+                        if (robotFinal.aDepasse(indexMain)) {
+                            afficherMessage(prefixResult + "dépasse 21 !");
+                            timerRef[0].stop();
+                            Timer finishTimer = new Timer(1500, evt -> {
+                                if (onFinish != null)
+                                    onFinish.run();
+                            });
+                            finishTimer.setRepeats(false);
+                            finishTimer.start();
+                        }
+                    }
                 } else {
-                    afficherMessage("Robot (score: " + scoreActuel + ") → RESTE");
+                    afficherMessage(prefix + scoreActuel + ") -> RESTE");
                     timerRef[0].stop();
                     // Exécuter la suite après un court délai
                     Timer finishTimer = new Timer(1500, evt -> {

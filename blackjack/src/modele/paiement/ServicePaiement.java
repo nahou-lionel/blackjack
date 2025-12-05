@@ -1,9 +1,15 @@
-package modele;
+package modele.paiement;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import modele.joueur.Croupier;
+import modele.joueur.Joueur;
+import modele.joueur.MainJoueur;
+import modele.partie.CalculateurScore;
+import modele.partie.ResultatBlackjack;
 
 /**
  * Service responsable de tous les calculs financiers du Blackjack
@@ -33,8 +39,8 @@ public class ServicePaiement {
      * @return Map associant chaque joueur à ses paiements (un par main)
      */
     public static Map<Joueur, List<Paiement>> calculerPaiements(List<Joueur> joueurs,
-                                                           List<Joueur> gagnants,
-                                                           Croupier croupier) {
+            List<Joueur> gagnants,
+            Croupier croupier) {
         Map<Joueur, List<Paiement>> paiements = new HashMap<>();
 
         for (Joueur joueur : joueurs) {
@@ -54,8 +60,8 @@ public class ServicePaiement {
      * @return Liste des paiements (un par main)
      */
     private static List<Paiement> calculerPaiementsJoueur(Joueur joueur,
-                                                           List<Joueur> gagnants,
-                                                           Croupier croupier) {
+            List<Joueur> gagnants,
+            Croupier croupier) {
         List<Paiement> paiementsJoueur = new ArrayList<>();
         List<MainJoueur> mains = joueur.getMains();
 
@@ -77,9 +83,9 @@ public class ServicePaiement {
      * @return Le paiement calculé pour cette main
      */
     private static Paiement calculerPaiementMain(Joueur joueur,
-                                                  MainJoueur main,
-                                                  List<Joueur> gagnants,
-                                                  Croupier croupier) {
+            MainJoueur main,
+            List<Joueur> gagnants,
+            Croupier croupier) {
         int mise = main.getMise();
         int montantPaye = 0;
         TypeResultat typeResultat;
@@ -166,12 +172,13 @@ public class ServicePaiement {
      * Utilisé quand la manche se termine dès la distribution
      * Retourne une liste pour compatibilité avec le système multi-mains
      *
-     * @param joueur           Le joueur
+     * @param joueur            Le joueur
      * @param resultatBlackjack Le résultat de la vérification des blackjacks
-     * @return Liste contenant le paiement calculé (une seule main au blackjack naturel)
+     * @return Liste contenant le paiement calculé (une seule main au blackjack
+     *         naturel)
      */
     public static List<Paiement> calculerPaiementBlackjack(Joueur joueur,
-                                                      ResultatBlackjack resultatBlackjack) {
+            ResultatBlackjack resultatBlackjack) {
         int mise = joueur.getMiseActuelle();
         int montantPaye;
         TypeResultat typeResultat;

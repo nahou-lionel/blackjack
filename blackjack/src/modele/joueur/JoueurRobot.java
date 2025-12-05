@@ -1,6 +1,8 @@
-package modele;
+package modele.joueur;
 
 import cartes.modele.Carte;
+import modele.partie.Action;
+import modele.strategie.StrategieJoueur;
 
 /**
  * Représente un joueur robot qui prend des décisions automatiquement
@@ -13,9 +15,9 @@ public class JoueurRobot extends Joueur {
     /**
      * Constructeur d'un joueur robot
      *
-     * @param nom Le nom du robot
+     * @param nom            Le nom du robot
      * @param banqueInitiale La banque de départ
-     * @param strategie La stratégie à utiliser pour les décisions
+     * @param strategie      La stratégie à utiliser pour les décisions
      */
     public JoueurRobot(String nom, int banqueInitiale, StrategieJoueur strategie) {
         super(nom);
@@ -32,6 +34,41 @@ public class JoueurRobot extends Joueur {
     public Action choisirAction(Carte carteVisibleCroupier) {
         int score = this.getScore();
         return strategie.decider(score, carteVisibleCroupier);
+    }
+
+    /**
+     * Le robot choisit son action pour une main spécifique
+     *
+     * @param carteVisibleCroupier La carte visible du croupier
+     * @param indexMain            L'index de la main à jouer
+     * @return L'action choisie par le robot
+     */
+    public Action choisirAction(Carte carteVisibleCroupier, int indexMain) {
+        int score = this.getScore(indexMain);
+        return strategie.decider(score, carteVisibleCroupier);
+    }
+
+    /**
+     * Le robot décide s'il doit splitter sa paire
+     *
+     * @param carteVisibleCroupier La carte visible du croupier
+     * @return true si le robot veut splitter, false sinon
+     */
+    public boolean veutSplitter(Carte carteVisibleCroupier) {
+        // Vérifier si la main peut être splittée
+        if (!this.getMains().get(0).peutEtreSplittee()) {
+            return false;
+        }
+
+        // Vérifier si le robot a assez d'argent
+        int miseActuelle = this.getMiseActuelle();
+        if (this.getBanque() < miseActuelle) {
+            return false;
+        }
+
+        // Demander à la stratégie si on doit splitter
+        Carte cartePaire = this.getMain().getCarte(0);
+        return strategie.doitSplitter(cartePaire, carteVisibleCroupier);
     }
 
     /**

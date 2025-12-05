@@ -6,29 +6,62 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 
-public class GUI {
-    public static void main(String[] args){
-        SwingUtilities.invokeLater(() -> {
-            try {
-                for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-                    if ("Nimbus".equals(info.getName())) {
-                        UIManager.setLookAndFeel(info.getClassName());
-                        break;
-                    }
+/**
+ * Fenêtre principale du jeu Blackjack
+ */
+public class GUI extends JFrame {
+
+    private boolean avecRobot;
+    private String typeStrategie;
+
+    /**
+     * Constructeur de l'interface graphique
+     *
+     * @param avecRobot true pour jouer avec un robot, false sinon
+     * @param typeStrategie "simple" ou "optimal" (utilisé seulement si avecRobot = true)
+     */
+    public GUI(boolean avecRobot, String typeStrategie) {
+        super("Blackjack");
+        this.avecRobot = avecRobot;
+        this.typeStrategie = typeStrategie;
+
+        initialiser();
+    }
+
+    /**
+     * Initialise l'interface graphique
+     */
+    private void initialiser() {
+        // Appliquer le look & feel Nimbus
+        try {
+            for (UIManager.LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
+                if ("Nimbus".equals(info.getName())) {
+                    UIManager.setLookAndFeel(info.getClassName());
+                    break;
                 }
-            } catch (Exception ignored) {}
+            }
+        } catch (Exception ignored) {}
 
-            JFrame frame = new JFrame("Blackjack");
-            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            frame.setLayout(new BorderLayout());
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLayout(new BorderLayout());
 
-            VueDepart vueDepart = new VueDepart();
-            vueDepart.getBoutonPlay().addActionListener(e->vueDepart.demarrerPartie(frame));
-            frame.setContentPane(vueDepart);
-            frame.pack();
-            //frame.setResizable(false);
-            frame.setLocationRelativeTo(null);
-            frame.setVisible(true);
+        // Créer la vue de départ avec les paramètres
+        VueDepart vueDepart = new VueDepart(avecRobot, typeStrategie);
+        vueDepart.getBoutonPlay().addActionListener(e -> vueDepart.demarrerPartie(this));
+
+        setContentPane(vueDepart);
+        pack();
+        setLocationRelativeTo(null);
+    }
+
+    /**
+     * Point d'entrée alternatif pour lancer le GUI directement
+     * (conservé pour compatibilité)
+     */
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            GUI gui = new GUI(false, "simple");
+            gui.setVisible(true);
         });
     }
 }

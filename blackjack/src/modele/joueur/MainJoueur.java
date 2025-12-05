@@ -1,7 +1,8 @@
-package modele;
+package modele.joueur;
 
 import cartes.modele.Carte;
 import cartes.modele.Paquet;
+import modele.partie.CalculateurScore;
 
 /**
  * Représente une main de cartes pour un joueur avec sa mise associée

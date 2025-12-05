@@ -118,24 +118,61 @@
 
     </target>
 
-	
-	
-    <!-- ==================== Run Target ================================== -->
-	
-    <target name="run" depends="dist">
+
+
+    <!-- ==================== Run Targets ================================== -->
+
+    <!-- Run solo (sans robot) -->
+    <target name="run" depends="dist" description="Lance le jeu en mode solo (sans robot)">
         <java jar="${dist.home}/${app.fullname}.jar" fork="true"/>
     </target>
-	
-    <!-- ==================== Run English ================================== -->
-	
-    <target name="run-english" depends="dist">
+
+    <!-- Run avec robot - stratégie simple -->
+    <target name="run-robot" depends="dist" description="Lance avec robot (stratégie simple)">
+        <java jar="${dist.home}/${app.fullname}.jar" fork="true">
+            <arg value="robot"/>
+        </java>
+    </target>
+
+    <!-- Run avec robot - stratégie simple (explicite) -->
+    <target name="run-robot-simple" depends="dist" description="Lance avec robot (stratégie simple)">
+        <java jar="${dist.home}/${app.fullname}.jar" fork="true">
+            <arg value="robot"/>
+            <arg value="simple"/>
+        </java>
+    </target>
+
+    <!-- Run avec robot - stratégie optimale -->
+    <target name="run-robot-optimal" depends="dist" description="Lance avec robot (stratégie optimale)">
+        <java jar="${dist.home}/${app.fullname}.jar" fork="true">
+            <arg value="robot"/>
+            <arg value="optimal"/>
+        </java>
+    </target>
+
+    <!-- Run avec arguments personnalisés via -Dargs="..." -->
+    <target name="run-custom" depends="dist" description="Lance avec arguments personnalisés (ant run-custom -Dargs='robot optimal')">
+        <java jar="${dist.home}/${app.fullname}.jar" fork="true">
+            <arg line="${args}"/>
+        </java>
+    </target>
+
+    <!-- Run English (sans robot) -->
+    <target name="run-english" depends="dist" description="Lance en anglais">
         <java jar="${dist.home}/${app.fullname}.jar" fork="true">
             <jvmarg value="-Duser.language=en"/>
         </java>
     </target>
-	
-	
-	
+
+    <!-- Afficher l'aide -->
+    <target name="run-help" depends="dist" description="Affiche l'aide du jeu">
+        <java jar="${dist.home}/${app.fullname}.jar" fork="true">
+            <arg value="help"/>
+        </java>
+    </target>
+
+
+
 
 
 </project>
