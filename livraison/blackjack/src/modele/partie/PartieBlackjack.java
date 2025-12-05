@@ -59,7 +59,7 @@ public class PartieBlackjack {
     public void demarrerNouvellePartie() {
         // Vérifier si le sabot a besoin d'être reshufflé
         if (sabotNecessiteReshuffle()) {
-            reshufflerSabot(1); // 1 jeu pour tester le rechargement
+            reshufflerSabot(2); // 2 par défaut
         }
 
         // Réinitialiser l'état
