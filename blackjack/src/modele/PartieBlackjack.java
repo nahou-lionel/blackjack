@@ -53,16 +53,16 @@ public class PartieBlackjack {
     public void demarrerNouvellePartie() {
         // Vérifier si le sabot a besoin d'être reshufflé
         if (sabotNecessiteReshuffle()) {
-            reshufflerSabot(2); // 2 jeux par défaut
+            reshufflerSabot(1); // 1 jeu pour tester le rechargement
         }
 
         // Réinitialiser l'état
         this.etat = EtatPartie.DISTRIBUTION;
 
-        // Vider les mains
+        // Vider les mains et réinitialiser les joueurs (important pour le split)
         croupier.getMain().vider();
         for (Joueur joueur : joueurs) {
-            joueur.getMain().vider();
+            joueur.reinitialiser(); // Réinitialise toutes les mains (après split)
         }
 
         // Réinitialiser la carte cachée du croupier
@@ -269,7 +269,16 @@ public class PartieBlackjack {
      */
     public void reshufflerSabot(int nombreJeux) {
         sabot.vider();
-        sabot = Paquet.creerPaquetMultiple(nombreJeux);
+
+        // Créer un nouveau paquet temporaire
+        Paquet nouveauPaquet = Paquet.creerPaquetMultiple(nombreJeux);
+
+        // Transférer toutes les cartes vers le sabot existant
+        // (pour maintenir les observateurs/listeners)
+        while (!nouveauPaquet.estVide()) {
+            sabot.ajouterCarte(nouveauPaquet.retirerPremiereCarte());
+        }
+
         sabot.melanger();
     }
 }

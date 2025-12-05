@@ -1,42 +1,13 @@
 package vue;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
+import java.awt.*;
+import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.JLayeredPane;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.SwingConstants;
-import javax.swing.Timer;
-import cartes.modele.Carte;
-import cartes.modele.Paquet;
-import cartes.vue.VuePaquetCache;
-import cartes.vue.VuePaquetVisible;
-import modele.CalculateurScore;
-import modele.Croupier;
-import modele.Joueur;
-import modele.MainJoueur;
-import modele.PartieBlackjack;
-import modele.Paiement;
-import modele.ResultatBlackjack;
-import modele.ResultatManche;
+import javax.swing.*;
+import cartes.modele.*;
+import cartes.vue.*;
+import modele.*;
 
 public class VuePartie extends JPanel {
 
@@ -60,6 +31,9 @@ public class VuePartie extends JPanel {
     private final VuePaquetCache vuePioche;
     private final VuePaquetVisible vueCroupier;
     private final VuePaquetVisible vueJoueur;
+
+    // Conteneur pour les mains du joueur (pour le split)
+    private JPanel conteneursMainsJoueur;
 
     // Elements propre à la partie
     private JLabel labelTitre;
@@ -96,8 +70,8 @@ public class VuePartie extends JPanel {
         setPreferredSize(new Dimension(1080, 720));
         setLayout(new BorderLayout());
 
-        // creer des mains
-        pioche = Paquet.creerPaquetMultiple(2);
+        // creer des mains (1 jeu pour tester le rechargement plus rapidement)
+        pioche = Paquet.creerPaquetMultiple(1);
         pioche.melanger();
 
         croupier = new Croupier();
@@ -195,7 +169,7 @@ public class VuePartie extends JPanel {
         return panelHaut;
     }
 
-        private JPanel creerZoneCentre() {
+    private JPanel creerZoneCentre() {
         JPanel centre = new JPanel(new BorderLayout());
         centre.setOpaque(false);
 
@@ -333,7 +307,10 @@ public class VuePartie extends JPanel {
         blocJoueur.setBorder(BorderFactory.createEmptyBorder(12, 0, 6, 0));
         blocJoueur.setAlignmentX(CENTER_ALIGNMENT);
 
-        JPanel contJoueur = creerBandeauCartes(vueJoueur);
+        // Conteneur dynamique pour les mains (1 ou 2 selon split)
+        conteneursMainsJoueur = new JPanel(new FlowLayout(FlowLayout.CENTER, 30, 12));
+        conteneursMainsJoueur.setOpaque(false);
+        rafraichirAffichageMainsJoueur(); // Initialiser avec une seule main
 
         JLabel titreJoueur = new JLabel("JOUEUR", SwingConstants.CENTER);
         titreJoueur.setFont(new Font("SansSerif", Font.BOLD, 16));
@@ -349,7 +326,7 @@ public class VuePartie extends JPanel {
         footerJoueur.add(labelScoreJoueur);
         footerJoueur.add(badgeJoueur);
 
-        blocJoueur.add(contJoueur, BorderLayout.CENTER);
+        blocJoueur.add(conteneursMainsJoueur, BorderLayout.CENTER);
         blocJoueur.add(footerJoueur, BorderLayout.SOUTH);
 
         gbc.gridy = 0;
@@ -581,8 +558,20 @@ public class VuePartie extends JPanel {
 
         // Démarrer une nouvelle manche via l'orchestrateur
         partie.demarrerNouvellePartie();
+
+        // Mettre à jour les références des mains après réinitialisation
+        mainJoueur = joueurPrincipal.getMain();
+        mainCroupier = croupier.getMain();
+
         joueurPrincipal.miser(mise);
         partie.distribuerCartesInitiales();
+
+        // MODE TEST : Forcer une paire pour tester le split
+        Paquet mainTest = joueurPrincipal.getMainAIndex(0).getMain();
+        mainTest.vider();
+        mainTest.ajouterCarte(new Carte(Couleur.COEUR, Hauteur.HUIT));
+        mainTest.ajouterCarte(new Carte(Couleur.PIQUE, Hauteur.HUIT));
+
         rafraichirAffichage();
 
         // Vérifier les blackjacks naturels via l'orchestrateur
@@ -676,7 +665,8 @@ public class VuePartie extends JPanel {
     }
 
     /**
-     * Passe à la main suivante lors d'un split, ou termine la manche si toutes les mains sont jouées
+     * Passe à la main suivante lors d'un split, ou termine la manche si toutes les
+     * mains sont jouées
      */
     private void passerMainSuivante() {
         mainActiveIndex++;
@@ -686,7 +676,8 @@ public class VuePartie extends JPanel {
             afficherMessage("Jouez maintenant la main " + (mainActiveIndex + 1));
             rafraichirAffichage();
 
-            // Si la main suivante est une main d'As splittés, elle ne peut tirer qu'une carte
+            // Si la main suivante est une main d'As splittés, elle ne peut tirer qu'une
+            // carte
             // et a déjà reçu cette carte, donc on passe automatiquement à la suivante
             if (!joueurPrincipal.getMainAIndex(mainActiveIndex).peutEncoreTirer()) {
                 passerMainSuivante();
@@ -825,17 +816,12 @@ public class VuePartie extends JPanel {
                 }
             }
             labelScoreJoueur.setText(scores.toString());
-
-            // Afficher toutes les cartes de toutes les mains dans le paquet visuel
-            mainJoueur.vider();
-            for (MainJoueur main : joueurPrincipal.getMains()) {
-                for (Carte carte : main.getMain().getCartes()) {
-                    mainJoueur.ajouterCarte(carte);
-                }
-            }
         } else {
             labelScoreJoueur.setText(scoreTexte(joueurPrincipal.getMain()));
         }
+
+        // Rafraîchir l'affichage des mains (1 ou 2 selon le mode)
+        rafraichirAffichageMainsJoueur();
 
         // Afficher le score du croupier basé sur ses cartes visibles si la 1re est
         // cachée
@@ -1014,6 +1000,12 @@ public class VuePartie extends JPanel {
         enModeSplit = false;
         mainActiveIndex = 0;
 
+        // Réinitialiser le joueur (important pour revenir à 1 seule main après split)
+        joueurPrincipal.reinitialiser();
+
+        // Mettre à jour la référence de mainJoueur après réinitialisation
+        mainJoueur = joueurPrincipal.getMain();
+
         // Remettre la mise précédente (ou 0 si le joueur n'a plus assez d'argent)
         if (misePrecedente > joueurPrincipal.getBanque()) {
             mise = 0;
@@ -1076,7 +1068,6 @@ public class VuePartie extends JPanel {
         }
     }
 
-
     private void verrouillerSiSoldeVide() {
         if (joueurPrincipal != null && joueurPrincipal.getBanque() <= 0) {
             mise = 0;
@@ -1096,5 +1087,73 @@ public class VuePartie extends JPanel {
 
         }
     }
-}
 
+    /**
+     * Rafraîchit l'affichage des mains du joueur (1 ou 2 en mode split)
+     */
+    private void rafraichirAffichageMainsJoueur() {
+        if (conteneursMainsJoueur == null) return;
+
+        conteneursMainsJoueur.removeAll();
+
+        int nombreMains = joueurPrincipal.getNombreMains();
+
+        for (int i = 0; i < nombreMains; i++) {
+            Paquet mainActuelle = joueurPrincipal.getMainAIndex(i).getMain();
+
+            // Créer une vue pour cette main
+            Color fondVert = new Color(10, 106, 51);
+            VuePaquetVisible vueMain = new VuePaquetVisible(mainActuelle, fondVert);
+
+            // Créer un conteneur pour cette main
+            JPanel conteneurMain = new JPanel();
+            conteneurMain.setLayout(new BoxLayout(conteneurMain, BoxLayout.Y_AXIS));
+            conteneurMain.setOpaque(false);
+
+            // Titre de la main
+            String titreMain = nombreMains > 1 ? "Main " + (i + 1) : "";
+
+            // Indicateur si c'est la main active
+            if (nombreMains > 1 && i == mainActiveIndex && enModeSplit) {
+                titreMain += " ◄ ACTIVE";
+            }
+
+            if (!titreMain.isEmpty()) {
+                JLabel labelTitreMain = new JLabel(titreMain, SwingConstants.CENTER);
+                labelTitreMain.setFont(new Font("SansSerif", Font.BOLD, 14));
+                labelTitreMain.setForeground(i == mainActiveIndex && enModeSplit ? ACCENT_TURQUOISE : Color.WHITE);
+                labelTitreMain.setAlignmentX(CENTER_ALIGNMENT);
+                conteneurMain.add(labelTitreMain);
+                conteneurMain.add(Box.createVerticalStrut(8));
+            }
+
+            // Ajouter la vue des cartes
+            vueMain.setAlignmentX(CENTER_ALIGNMENT);
+            conteneurMain.add(vueMain);
+
+            // Score de cette main
+            int scoreMain = CalculateurScore.calculerScore(mainActuelle);
+            JLabel labelScoreMain = new JLabel("Score: " + scoreMain, SwingConstants.CENTER);
+            labelScoreMain.setFont(new Font("SansSerif", Font.PLAIN, 13));
+            labelScoreMain.setForeground(ACCENT_AMBRE);
+            labelScoreMain.setAlignmentX(CENTER_ALIGNMENT);
+            conteneurMain.add(Box.createVerticalStrut(6));
+            conteneurMain.add(labelScoreMain);
+
+            // Bordure si c'est la main active
+            if (nombreMains > 1 && i == mainActiveIndex && enModeSplit) {
+                conteneurMain.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(ACCENT_TURQUOISE, 3, true),
+                    BorderFactory.createEmptyBorder(10, 10, 10, 10)
+                ));
+            } else {
+                conteneurMain.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+            }
+
+            conteneursMainsJoueur.add(conteneurMain);
+        }
+
+        conteneursMainsJoueur.revalidate();
+        conteneursMainsJoueur.repaint();
+    }
+}

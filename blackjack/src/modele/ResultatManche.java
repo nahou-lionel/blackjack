@@ -1,6 +1,5 @@
 package modele;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -18,13 +17,15 @@ public class ResultatManche {
     /**
      * Crée un résultat de manche
      *
-     * @param gagnants        Liste des joueurs gagnants
-     * @param paiements       Map des paiements pour chaque joueur (liste de paiements pour split)
-     * @param etatFinal       État final de la partie
-     * @param blackjackNaturel true si la manche s'est terminée par un blackjack naturel
+     * @param gagnants         Liste des joueurs gagnants
+     * @param paiements        Map des paiements pour chaque joueur (liste de
+     *                         paiements pour split)
+     * @param etatFinal        État final de la partie
+     * @param blackjackNaturel true si la manche s'est terminée par un blackjack
+     *                         naturel
      */
     public ResultatManche(List<Joueur> gagnants, Map<Joueur, List<Paiement>> paiements,
-                          EtatPartie etatFinal, boolean blackjackNaturel) {
+            EtatPartie etatFinal, boolean blackjackNaturel) {
         this.gagnants = gagnants;
         this.paiements = paiements;
         this.etatFinal = etatFinal;
