@@ -10,8 +10,9 @@ import cartes.modele.Paquet;
  */
 public class VuePaquetVisible extends VuePaquet implements VuePaquetInteractive {
 
-    private static final int ESPACEMENT_CARTE = 80; // Espacement entre cartes
-    private static final int ESPACEMENT_MIN = 18;
+    private static final int ESPACEMENT_CARTE = 90; // Espacement entre cartes
+    private static final int ESPACEMENT_MIN = 50;   // éviter que les cartes se chevauchent
+    private static final Dimension TAILLE_VIDE_FIXE = new Dimension(LARGEUR_CARTE + 60, HAUTEUR_CARTE + 60);
     private int carteEnSurbrillance = -1;
     private boolean masquerPremiereCarte = false;
 
@@ -40,7 +41,7 @@ public class VuePaquetVisible extends VuePaquet implements VuePaquetInteractive 
     private void calculerDimensions() {
         Dimension d = calculerDimensionOptimisee();
         setPreferredSize(d);
-        setMinimumSize(new Dimension(LARGEUR_CARTE + 40, HAUTEUR_CARTE + 40));
+        setMinimumSize(TAILLE_VIDE_FIXE);
     }
 
     @Override
@@ -48,6 +49,7 @@ public class VuePaquetVisible extends VuePaquet implements VuePaquetInteractive 
         int nbCartes = paquet.getTaille();
 
         if (nbCartes == 0) {
+            setPreferredSize(TAILLE_VIDE_FIXE);
             // Dessiner un cadre vide
             Graphics2D g2d = (Graphics2D) g;
             g2d.setColor(new Color(200, 200, 200));
@@ -65,7 +67,7 @@ public class VuePaquetVisible extends VuePaquet implements VuePaquetInteractive 
                 : (getParent() != null ? getParent().getWidth() : calculerDimensionOptimisee().width);
         int spacing = calculerEspacement(nbCartes, largeurDispo);
         int totalWidth = LARGEUR_CARTE + (nbCartes - 1) * spacing;
-        int startX = Math.max(20, (largeurDispo - totalWidth) / 2);
+        int startX = Math.max(10, (largeurDispo - totalWidth) / 2);
 
         // Dessiner chaque carte
         for (int i = 0; i < nbCartes; i++) {
@@ -98,11 +100,10 @@ public class VuePaquetVisible extends VuePaquet implements VuePaquetInteractive 
             return ESPACEMENT_CARTE;
         }
 
-        int largeurUtilisable = Math.max(largeurDisponible - 40, LARGEUR_CARTE);
         int spacing = ESPACEMENT_CARTE;
-        if (largeurUtilisable > 0) {
-            spacing = Math.min(ESPACEMENT_CARTE,
-                    Math.max(ESPACEMENT_MIN, (largeurUtilisable - LARGEUR_CARTE) / Math.max(1, nbCartes - 1)));
+        if (nbCartes > 1 && largeurDisponible > 0) {
+            int spacingCalcule = (largeurDisponible - LARGEUR_CARTE - 40) / Math.max(1, nbCartes - 1);
+            spacing = Math.min(ESPACEMENT_CARTE, Math.max(ESPACEMENT_MIN, spacingCalcule));
         }
         return spacing;
     }
@@ -110,21 +111,21 @@ public class VuePaquetVisible extends VuePaquet implements VuePaquetInteractive 
     private Dimension calculerDimensionOptimisee() {
         int nbCartes = paquet.getTaille();
         if (nbCartes <= 0) {
-            return new Dimension(LARGEUR_CARTE + 40, HAUTEUR_CARTE + 40);
+            return TAILLE_VIDE_FIXE;
         }
 
         int largeurDispo = (getParent() != null && getParent().getWidth() > 0)
                 ? getParent().getWidth()
-                : nbCartes * ESPACEMENT_CARTE + 40;
+                : nbCartes * ESPACEMENT_CARTE + 60;
         int spacing = calculerEspacement(nbCartes, largeurDispo);
-        int largeurCible = Math.max(LARGEUR_CARTE + 40,
-                LARGEUR_CARTE + (nbCartes - 1) * spacing + 40);
+        int largeurCible = Math.max(LARGEUR_CARTE + 60,
+                LARGEUR_CARTE + (nbCartes - 1) * spacing + 60);
 
         if (getParent() != null && getParent().getWidth() > 0) {
             largeurCible = Math.max(largeurCible, getParent().getWidth());
         }
 
-        return new Dimension(largeurCible, HAUTEUR_CARTE + 40);
+        return new Dimension(largeurCible, HAUTEUR_CARTE + 60);
     }
 
     /**

@@ -43,6 +43,8 @@ public class VuePartie extends JPanel {
     private JLabel labelTitre;
     private JLabel labelSolde;
     private JLabel labelMise;
+    private JLabel labelSoldeRobot;
+    private JLabel labelMiseRobot;
     private JLabel labelScoreCroupier;
     private JLabel labelScoreJoueur;
     private JLabel labelScoreRobot;
@@ -96,7 +98,7 @@ public class VuePartie extends JPanel {
         mainRobot = robot.getMain();
 
         // création des vues des mains avec couleur de fond verte
-        Color fondVert = new Color(10, 106, 51);
+        Color fondVert = VERT_TABLE;
         vuePioche = new VuePaquetCache(pioche, fondVert);
         vueCroupier = new VuePaquetVisible(mainCroupier, fondVert);
         vueJoueur = new VuePaquetVisible(mainJoueur, fondVert);
@@ -177,6 +179,7 @@ public class VuePartie extends JPanel {
         panelCentre.add(labelTitre);
         panelCentre.add(Box.createVerticalStrut(8));
         panelCentre.add(labelMessage);
+        // Les actions et mises sont gérées dans le bandeau central
 
         panelHaut.add(panelCentre, BorderLayout.CENTER);
         return panelHaut;
@@ -186,7 +189,7 @@ public class VuePartie extends JPanel {
         JPanel centre = new JPanel(new BorderLayout());
         centre.setOpaque(false);
 
-        // Bloc solde et mise
+        // Bloc solde et mise du joueur
         JPanel panelInfo = new JPanel();
         panelInfo.setOpaque(true);
         panelInfo.setBackground(PANNEAU_NUIT);
@@ -209,7 +212,30 @@ public class VuePartie extends JPanel {
         panelInfo.add(Box.createVerticalStrut(5));
         panelInfo.add(labelMise);
 
-        // Bandeau haut: pioche + actions + mises/info
+        // Bloc solde et mise du robot
+        JPanel panelInfoRobot = new JPanel();
+        panelInfoRobot.setOpaque(true);
+        panelInfoRobot.setBackground(PANNEAU_NUIT);
+        panelInfoRobot.setLayout(new BoxLayout(panelInfoRobot, BoxLayout.Y_AXIS));
+        panelInfoRobot.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(150, 200, 255), 1, true),
+                BorderFactory.createEmptyBorder(10, 15, 10, 15)));
+
+        labelSoldeRobot = new JLabel();
+        labelSoldeRobot.setFont(new Font("SansSerif", Font.BOLD, 15));
+        labelSoldeRobot.setForeground(new Color(200, 225, 255));
+        labelSoldeRobot.setAlignmentX(CENTER_ALIGNMENT);
+
+        labelMiseRobot = new JLabel();
+        labelMiseRobot.setFont(new Font("SansSerif", Font.BOLD, 15));
+        labelMiseRobot.setForeground(new Color(200, 225, 255));
+        labelMiseRobot.setAlignmentX(CENTER_ALIGNMENT);
+
+        panelInfoRobot.add(labelSoldeRobot);
+        panelInfoRobot.add(Box.createVerticalStrut(5));
+        panelInfoRobot.add(labelMiseRobot);
+
+        // Bandeau haut: pioche + actions/jetons + infos
         JPanel panelHautCentre = new JPanel(new BorderLayout());
         panelHautCentre.setOpaque(false);
         panelHautCentre.setBorder(BorderFactory.createEmptyBorder(8, 12, 6, 12));
@@ -218,18 +244,37 @@ public class VuePartie extends JPanel {
         panelPioche.setOpaque(false);
         panelPioche.add(vuePioche);
 
+        // Centre : actions + jetons + reset/tout miser alignés au centre
+        JPanel centreActionsWrapper = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        centreActionsWrapper.setOpaque(false);
+        JPanel centreActions = new JPanel();
+        centreActions.setOpaque(false);
+        centreActions.setLayout(new BoxLayout(centreActions, BoxLayout.Y_AXIS));
         JPanel blocActions = creerZoneActions();
-        blocActions.setOpaque(false);
+        blocActions.setAlignmentX(CENTER_ALIGNMENT);
+        JPanel blocJetons = creerPanelJetons();
+        blocJetons.setAlignmentX(CENTER_ALIGNMENT);
+        JPanel blocReset = creerPanelResetMises();
+        blocReset.setAlignmentX(CENTER_ALIGNMENT);
+        centreActions.add(blocActions);
+        centreActions.add(Box.createVerticalStrut(6));
+        centreActions.add(blocJetons);
+        centreActions.add(Box.createVerticalStrut(6));
+        centreActions.add(blocReset);
+        centreActionsWrapper.add(centreActions);
 
+        // Droite : soldes joueur/robot
         JPanel blocDroite = new JPanel();
         blocDroite.setOpaque(false);
         blocDroite.setLayout(new BoxLayout(blocDroite, BoxLayout.Y_AXIS));
+        panelInfo.setAlignmentX(RIGHT_ALIGNMENT);
+        panelInfoRobot.setAlignmentX(RIGHT_ALIGNMENT);
         blocDroite.add(panelInfo);
         blocDroite.add(Box.createVerticalStrut(6));
-        blocDroite.add(creerZoneMises());
+        blocDroite.add(panelInfoRobot);
 
         panelHautCentre.add(panelPioche, BorderLayout.WEST);
-        panelHautCentre.add(blocActions, BorderLayout.CENTER);
+        panelHautCentre.add(centreActionsWrapper, BorderLayout.CENTER);
         panelHautCentre.add(blocDroite, BorderLayout.EAST);
 
         centre.add(panelHautCentre, BorderLayout.NORTH);
@@ -364,7 +409,7 @@ public class VuePartie extends JPanel {
         footerJoueur.add(labelScoreJoueur);
         footerJoueur.add(badgeJoueur);
 
-        blocJoueur.add(conteneursMainsJoueur, BorderLayout.CENTER);
+        blocJoueur.add(creerBandeauCartes(conteneursMainsJoueur), BorderLayout.CENTER);
         blocJoueur.add(footerJoueur, BorderLayout.SOUTH);
 
         // Ajouter les panneaux au plateau
@@ -388,7 +433,7 @@ public class VuePartie extends JPanel {
     }
 
     private JPanel creerBandeauCartes(JComponent contenu) {
-        JPanel supportCentre = new JPanel(new FlowLayout(FlowLayout.CENTER, 18, 12));
+        JPanel supportCentre = new JPanel(new FlowLayout(FlowLayout.CENTER, 18, 8));
         supportCentre.setOpaque(false);
         supportCentre.add(contenu);
 
@@ -402,17 +447,17 @@ public class VuePartie extends JPanel {
                 java.awt.Graphics2D g2 = (java.awt.Graphics2D) g.create();
                 g2.setRenderingHint(java.awt.RenderingHints.KEY_ANTIALIASING,
                         java.awt.RenderingHints.VALUE_ANTIALIAS_ON);
-                int arc = 24;
-                g2.setPaint(new java.awt.GradientPaint(0, 0, new Color(0, 0, 0, 90), 0, getHeight(),
-                        new Color(255, 255, 255, 30)));
+                int arc = 18;
+                g2.setColor(VERT_TABLE);
                 g2.fillRoundRect(0, 0, getWidth(), getHeight(), arc, arc);
-                g2.setColor(new Color(255, 255, 255, 50));
+                g2.setColor(new Color(255, 255, 255, 70));
                 g2.setStroke(new java.awt.BasicStroke(2f));
                 g2.drawRoundRect(1, 1, getWidth() - 2, getHeight() - 2, arc, arc);
                 g2.dispose();
             }
         };
-        bandeau.setOpaque(false);
+        bandeau.setOpaque(true);
+        bandeau.setBackground(VERT_TABLE);
         bandeau.setBorder(BorderFactory.createEmptyBorder(12, 16, 12, 16));
         bandeau.setMinimumSize(new Dimension(200, bandeauHeight));
         bandeau.add(supportCentre, BorderLayout.CENTER);
@@ -463,22 +508,18 @@ public class VuePartie extends JPanel {
         return actions;
     }
 
-    private JPanel creerZoneMises() {
-        JPanel misesPanel = new JPanel();
-        misesPanel.setOpaque(false);
-        misesPanel.setLayout(new BoxLayout(misesPanel, BoxLayout.Y_AXIS));
-        misesPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 16, 0));
-
-        // Ligne jetons
+    private JPanel creerPanelJetons() {
         JPanel ligneJetons = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 6));
         ligneJetons.setOpaque(false);
         creerJeton(ligneJetons, 10, new Color(230, 230, 230), Color.BLACK);
         creerJeton(ligneJetons, 25, new Color(204, 0, 0), Color.WHITE);
         creerJeton(ligneJetons, 50, new Color(0, 153, 0), Color.WHITE);
         creerJeton(ligneJetons, 100, new Color(0, 102, 204), Color.WHITE);
+        return ligneJetons;
+    }
 
-        // Ligne actions de mise
-        JPanel ligneMiseActions = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 6));
+    private JPanel creerPanelResetMises() {
+        JPanel ligneMiseActions = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 6));
         ligneMiseActions.setOpaque(false);
 
         boutonResetMise = creerBoutonAction("Reset Bet", new Color(80, 80, 80));
@@ -497,10 +538,7 @@ public class VuePartie extends JPanel {
 
         ligneMiseActions.add(boutonResetMise);
         ligneMiseActions.add(boutonToutMiser);
-
-        misesPanel.add(ligneJetons);
-        misesPanel.add(ligneMiseActions);
-        return misesPanel;
+        return ligneMiseActions;
     }
 
     private JButton creerBoutonAction(String texte, Color fond) {
@@ -899,6 +937,8 @@ public class VuePartie extends JPanel {
         // Afficher le score du robot
         if (robot != null) {
             labelScoreRobot.setText(scoreTexte(robot.getMain()));
+            labelSoldeRobot.setText("Solde robot: $" + robot.getBanque());
+            labelMiseRobot.setText("Mise robot: $" + robot.getMiseActuelle());
         }
 
         // Afficher le score du croupier basé sur ses cartes visibles si la 1re est
@@ -939,36 +979,9 @@ public class VuePartie extends JPanel {
      *
      * @param resultat Le résultat complet de la manche
      */
-    private void afficherResultat(ResultatManche resultat) {
-        Paiement paiement = resultat.getPaiementPour(joueurPrincipal);
-
-        if (paiement == null) {
-            // Ne devrait pas arriver, mais sécurité
-            afficherGagnantEtReset(false);
-            return;
-        }
-
-        // Afficher visuellement selon le type de résultat
-        switch (paiement.getTypeResultat()) {
-            case VICTOIRE:
-                int profit = paiement.getProfit();
-                afficherMessage("Vous avez gagné +" + profit + "$!");
-                afficherGagnantEtReset(true);
-                break;
-            case BLACKJACK:
-                int profitBJ = paiement.getProfit();
-                afficherMessage("BLACKJACK! +" + profitBJ + "$!");
-                afficherGagnantEtReset(true);
-                break;
-            case PUSH:
-                afficherMessage("Égalité - Mise remboursée");
-                afficherBadgeAucunPuisReset();
-                break;
-            case PERTE:
-                afficherMessage("Vous avez perdu...");
-                afficherGagnantEtReset(false);
-                break;
-        }
+        private void afficherResultat(ResultatManche resultat) {
+        afficherMessage(construireMessageResultats(resultat));
+        afficherBadgesEtReset(resultat);
     }
 
     /**
@@ -976,52 +989,9 @@ public class VuePartie extends JPanel {
      *
      * @param resultat Le résultat complet de la manche
      */
-    private void afficherResultatSplit(ResultatManche resultat) {
-        List<Paiement> paiements = resultat.getPaiementsPour(joueurPrincipal);
-
-        if (paiements == null || paiements.isEmpty()) {
-            afficherGagnantEtReset(false);
-            return;
-        }
-
-        // Calculer le profit total
-        int profitTotal = resultat.getProfitTotal(joueurPrincipal);
-
-        // Déterminer si le joueur a globalement gagné
-        boolean aGagne = profitTotal > 0;
-
-        // Message détaillé
-        StringBuilder message = new StringBuilder();
-        for (int i = 0; i < paiements.size(); i++) {
-            Paiement p = paiements.get(i);
-            message.append("Main ").append(i + 1).append(": ");
-            switch (p.getTypeResultat()) {
-                case VICTOIRE:
-                    message.append("Victoire (+" + p.getProfit() + "$)");
-                    break;
-                case BLACKJACK:
-                    message.append("21! (+" + p.getProfit() + "$)");
-                    break;
-                case PUSH:
-                    message.append("Push");
-                    break;
-                case PERTE:
-                    message.append("Perdu");
-                    break;
-            }
-            if (i < paiements.size() - 1) {
-                message.append(" | ");
-            }
-        }
-
-        if (profitTotal > 0) {
-            message.append(" - Total: +").append(profitTotal).append("$");
-        } else if (profitTotal < 0) {
-            message.append(" - Total: ").append(profitTotal).append("$");
-        }
-
-        afficherMessage(message.toString());
-        afficherGagnantEtReset(aGagne || profitTotal == 0);
+        private void afficherResultatSplit(ResultatManche resultat) {
+        afficherMessage(construireMessageResultats(resultat));
+        afficherBadgesEtReset(resultat);
     }
 
     private void desactiverActionsPendantAnnonce() {
@@ -1033,39 +1003,8 @@ public class VuePartie extends JPanel {
         activerJetons(false);
     }
 
-    private void afficherBadgeAucunPuisReset() {
-        Timer t = new Timer(2000, new java.awt.event.ActionListener() {
-            @Override
-            public void actionPerformed(java.awt.event.ActionEvent e) {
-                reinitialiserPlateau();
-            }
-        });
-        t.setRepeats(false);
-        t.start();
-    }
 
-    private void afficherGagnantEtReset(boolean joueurGagnant) {
-        if (badgeJoueur != null && badgeCroupier != null) {
-            badgeJoueur.setVisible(joueurGagnant);
-            badgeCroupier.setVisible(!joueurGagnant);
-        }
-        revalidate();
-        repaint();
-
-        Timer t = new Timer(2000, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (badgeJoueur != null)
-                    badgeJoueur.setVisible(false);
-                if (badgeCroupier != null)
-                    badgeCroupier.setVisible(false);
-                reinitialiserPlateau();
-            }
-        });
-        t.setRepeats(false);
-        t.start();
-    }
-
+    
     /**
      * Réinitialise le plateau pour préparer une nouvelle manche
      */
@@ -1140,13 +1079,11 @@ public class VuePartie extends JPanel {
         if (coucheCroupier == null || vueCroupier == null)
             return;
         Dimension d = vueCroupier.getPreferredSize();
-        if (coucheCroupier.getParent() != null && coucheCroupier.getParent().getWidth() > 0) {
-            d = new Dimension(Math.max(d.width, coucheCroupier.getParent().getWidth()), d.height);
-        }
         coucheCroupier.setPreferredSize(d);
         coucheCroupier.setMinimumSize(d);
         vueCroupier.setBounds(0, 0, d.width, d.height);
         if (overlayCroupier != null) {
+            overlayCroupier.setBounds(0, 0, 0, 0);
             overlayCroupier.setVisible(false);
         }
     }
@@ -1186,7 +1123,7 @@ public class VuePartie extends JPanel {
             Paquet mainActuelle = joueurPrincipal.getMainAIndex(i).getMain();
 
             // Créer une vue pour cette main
-            Color fondVert = new Color(10, 106, 51);
+            Color fondVert = VERT_TABLE;
             VuePaquetVisible vueMain = new VuePaquetVisible(mainActuelle, fondVert);
 
             // Créer un conteneur pour cette main
@@ -1334,4 +1271,94 @@ public class VuePartie extends JPanel {
 
         timerRef[0].start();
     }
+
+    private void afficherBadgesEtReset(ResultatManche resultat) {
+        boolean joueurGagnant = resultat.aGagne(joueurPrincipal);
+        boolean robotGagnant = robot != null && resultat.aGagne(robot);
+
+        boolean toutPush = true;
+        for (Joueur j : partie.getJoueurs()) {
+            List<Paiement> ps = resultat.getPaiementsPour(j);
+            if (ps == null || ps.isEmpty()) {
+                toutPush = false;
+                break;
+            }
+            Paiement p = ps.get(0);
+            if (p.getTypeResultat() != TypeResultat.PUSH) {
+                toutPush = false;
+                break;
+            }
+        }
+
+        if (badgeJoueur != null)
+            badgeJoueur.setVisible(joueurGagnant);
+        if (badgeRobot != null)
+            badgeRobot.setVisible(robotGagnant);
+        if (badgeCroupier != null)
+            badgeCroupier.setVisible(!joueurGagnant && !robotGagnant && !toutPush);
+
+        revalidate();
+        repaint();
+
+        Timer t = new Timer(4000, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (badgeJoueur != null)
+                    badgeJoueur.setVisible(false);
+                if (badgeRobot != null)
+                    badgeRobot.setVisible(false);
+                if (badgeCroupier != null)
+                    badgeCroupier.setVisible(false);
+                reinitialiserPlateau();
+            }
+        });
+        t.setRepeats(false);
+        t.start();
+    }
+
+    private String construireMessageResultats(ResultatManche resultat) {
+        List<String> parties = new ArrayList<>();
+        for (Joueur j : partie.getJoueurs()) {
+            List<Paiement> paiements = resultat.getPaiementsPour(j);
+            String nom = j.getNom();
+            if (paiements == null || paiements.isEmpty()) {
+                parties.add(nom + " : match nul");
+                continue;
+            }
+            Paiement p = paiements.get(0);
+            String statut;
+            switch (p.getTypeResultat()) {
+                case VICTOIRE:
+                    statut = "gagne (+" + p.getProfit() + "$)";
+                    break;
+                case BLACKJACK:
+                    statut = "BLACKJACK (+" + p.getProfit() + "$)";
+                    break;
+                case PUSH:
+                    statut = "match nul";
+                    break;
+                case PERTE:
+                default:
+                    statut = "perd";
+                    break;
+            }
+            parties.add(nom + " : " + statut);
+        }
+        if (parties.isEmpty()) {
+            return "Aucun résultat";
+        }
+        return String.join(" | ", parties);
+    }
 }
+
+
+
+
+
+
+
+
+
+
+
+
